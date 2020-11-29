@@ -1,0 +1,151 @@
+label.error {
+  width: 100%;
+  color: red;
+  font-weight: bold;
+  /*padding: .7em;*/
+  /*vertical-align: middle;*/
+  font-size: 12px;
+  /*border: 1px red solid;
+  border-top: none;*/
+}
+
+.vh-70 {
+  height: 70vh;
+}
+
+.overflow-scroll {
+  overflow-y: scroll;
+}
+
+.text-serif {
+  font-family: "sans-serif" !important;
+}
+
+.nav-link {
+  font-size: 14px !important;
+  text-transform: unset !important;
+}
+
+.ftco-navbar-light .navbar-nav > .nav-item > .nav-link:hover {
+  color: #007bff !important;
+}
+
+.dropdown-user {
+  left: unset;
+  right: 0;
+}
+
+img.zoom, .overflow-hidden:hover img.zoom {
+  overflow: hidden;
+  -webkit-transition: all .9s ease;
+  -moz-transition: all .9s ease;
+  -o-transition: all .9s ease;
+  -ms-transition: all .9s ease;
+  transition: all .9s ease;
+}
+
+img.zoom:hover, .overflow-hidden:hover img.zoom {
+  -webkit-transform: scale(1.15);
+  -moz-transform: scale(1.15);
+  -o-transform: scale(1.15);
+  -ms-transform: scale(1.15);
+  transform: scale(1.15);
+}
+
+.top {
+  top: 0;
+}
+
+.top-n-10 {
+  top: -10px;
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+.right-n-5 {
+  right: -5px;
+}
+
+#banner .main-banner .carousel-inner, #banner .main-banner .carousel-inner img {
+  height: 88vh;
+}
+
+#banner .main-banner .carousel-inner img {
+  width: 100%;
+}
+
+#banner .main-banner .carousel-inner h1 {
+  line-height: 45px;
+}
+
+@media (max-width: 700px) {
+  #banner .main-banner .carousel-inner img {
+    width: unset;
+    background-size: cover;
+    background-position: center;
+  }
+}
+
+.card-product h5 {
+  transition: .5s;
+}
+
+.card-product h5:hover {
+  color: #dc3545 !important;
+  transition: .5s;
+}
+
+.square-color {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #dddddd !important;
+}
+
+.square-color.active {
+  border: 3px solid #80b9f7 !important;
+}
+
+#lightgallery-product, #lightgallery-product li {
+  height: 380px !important;
+}
+
+#lightgallery-product img {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #e4e4e4;
+}
+
+.lSSlideOuter .lSPager.lSGallery img {
+  width: 100%;
+  height: 75px;
+  border: 3px solid #e4e4e4;
+}
+
+@media (max-width: 991px) {
+  #table-cart thead tr th:nth-child(2), #table-cart tbody tr td.image-prod, #table-cart tbody tr td:nth-child(2) {
+    display: none;
+  }
+}
+
+#map-contact iframe {
+  width: 100%;
+  height: 400px;
+}
+
+@media (max-width: 991px) {
+  #map-contact iframe {
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  #map-contact iframe {
+    height: 200px;
+  }
+}
