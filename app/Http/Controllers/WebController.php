@@ -129,9 +129,9 @@ class WebController extends Controller
                     $total+=$subtotal;
 
                     if ($num==0) {
-                        $request->session()->put('cart', array(0 => ['product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'size' => $size, 'color' => $color, 'code' => $item['code']]));
+                        $request->session()->put('cart', array(0 => ['product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'discount' => $product->discount, 'size' => $size, 'color' => $color, 'code' => $item['code']]));
                     } else {
-                        $request->session()->push('cart', array('product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'size' => $size, 'color' => $color, 'code' => $item['code']));
+                        $request->session()->push('cart', array('product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'discount' => $product->discount, 'size' => $size, 'color' => $color, 'code' => $item['code']));
                     }
                     $num++;
                 }
@@ -265,28 +265,32 @@ class WebController extends Controller
             $request->session()->forget('cart');
             $num=0;
             foreach ($cart as $item) {
-                $size=Size::where('slug', $item['size']->slug)->first();
-                $color=Color::where('slug', $item['color']->slug)->first();
                 $product=Product::where('slug', $item['product']->slug)->first();
+                if (!is_null($product) && $product->qty>0) {
+                    $color=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->first() : NULL;
+                    $size=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->first() : NULL;
+                    if (!is_null($color)) {
+                        $color=($color->products->where('id', $product->id)->isNotEmpty()) ? $color : NULL;
+                    }
+                    if (!is_null($size)) {
+                        $size=($size->products->where('id', $product->id)->isNotEmpty()) ? $size : NULL;
+                    }
 
-                $productSize=ProductSize::where([['product_id', $product->id], ['size_id', $size->id]])->first();
-                $productColor=ColorProduct::where([['product_id', $product->id], ['color_id', $color->id]])->first();
-
-                if (!is_null($productColor) && !is_null($productSize)) {
+                    $qty=($product->qty>=$item['qty']) ? $item['qty'] : $product->qty;
                     if ($product->discount>0) {
-                        $subtotal=($product->price-(($product->price*$product->discount)/100))*$item['qty'];
+                        $subtotal=($product->price-(($product->price*$product->discount)/100))*$qty;
                         $price=($product->price-(($product->price*$product->discount)/100));
                     } else {
-                        $subtotal=$product->price*$item['qty'];
+                        $subtotal=$product->price*$qty;
                         $price=$product->price;
                     }
                     $products[$num]['subtotal']=number_format($subtotal, 2, ',', '.');
                     $total+=$subtotal;
 
                     if ($num==0) {
-                        $request->session()->put('cart', array(0 => ['product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'size' => $size, 'color' => $color, 'code' => $item['code']]));
+                        $request->session()->put('cart', array(0 => ['product' => $product, 'qty' => $qty, 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'discount' => $product->discount, 'size' => $size, 'color' => $color, 'code' => $item['code']]));
                     } else {
-                        $request->session()->push('cart', array('product' => $product, 'qty' => $item['qty'], 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'size' => $size, 'color' => $color, 'code' => $item['code']));
+                        $request->session()->push('cart', array('product' => $product, 'qty' => $qty, 'subtotal' => number_format($subtotal, 2, ',', '.'), 'price' => $price, 'discount' => $product->discount, 'size' => $size, 'color' => $color, 'code' => $item['code']));
                     }
                     $num++;
                 }
@@ -349,14 +353,10 @@ class WebController extends Controller
         $order=Order::create($data);
 
         foreach (session('cart') as $item) {
-            $product=Product::where('slug', $item['product']->slug)->first();
-            $size=Size::where('slug', $item['size']->slug)->first();
-            $color=Color::where('slug', $item['color']->slug)->first();
-            $product_id=(is_null($product)) ? NULL : $product->id;
-            $size_id=(is_null($size)) ? NULL : $size->id;
-            $color_id=(is_null($color)) ? NULL : $color->id;
+            $size_id=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->first()->id : NULL;
+            $color_id=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->first()->id : NULL;
 
-            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $product_id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
+            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $item['product']->id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
             Item::create($data)->save();
         }
 

@@ -107,7 +107,7 @@
 											@foreach($order->items as $item)
 											<tr>
 												<td>{{ $num++ }}</td>
-												<td>{{ $item->product->name." (Talla ".$item->size->name.")" }}<br><i class="fa fa-square" style="color: {{ $item->color->color }};"></i> {{ $item->color->name }}</td>
+												<td>{{ $item->product->name }}@if(!is_null($item->size)){{ " (Talla ".$item->size->name.")" }}@endif @if(!is_null($item->color))<br><i class="fa fa-square" style="color: {{ $item->color->color }};"></i> {{ $item->color->color }}@endif</td>
 												<td>{{ $item->qty }}</td>
 												<td>{{ "$".number_format($item->price, 2, ",", ".") }}</td>
 												<td>{{ "$".number_format($item->subtotal, 2, ",", ".") }}</td>

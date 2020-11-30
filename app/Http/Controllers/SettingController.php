@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\User;
 use App\Category;
+use App\Subcategory;
 use App\Product;
 use App\Setting;
 use App\Http\Requests\DiscountUpdateRequest;
@@ -24,7 +25,8 @@ class SettingController extends Controller
     public function editDiscounts() {
         $setting=Setting::where('id', 1)->firstOrFail();
         $categories=Category::all();
-        return view('admin.settings.discounts', compact("setting", "categories"));
+        $subcategories=Subcategory::all();
+        return view('admin.settings.discounts', compact("setting", "categories", "subcategories"));
     }
 
     public function updateDiscounts(DiscountUpdateRequest $request) {
@@ -36,12 +38,21 @@ class SettingController extends Controller
                 $product->fill(['discount' => request('discount')])->save();
             }
             $setting->fill($request->all())->save();
-        } else {
+        } elseif (request('type')==2) {
             foreach (request("category_id") as $category) {
                 $category=Category::where('slug', $category)->first();
                 if (!is_null($category)) {
-                    foreach ($category->products as $product) {
+                    foreach ($category->subcategories()->with('products')->get()->pluck('products')->collapse()->unique('id')->values() as $product) {
                         $product->fill(['discount' => request('category_discount')])->save();
+                    }
+                }
+            }
+        } else {
+            foreach (request("subcategory_id") as $subcategory) {
+                $subcategory=Subcategory::where('slug', $subcategory)->first();
+                if (!is_null($subcategory)) {
+                    foreach ($subcategory->products as $product) {
+                        $product->fill(['discount' => request('subcategory_discount')])->save();
                     }
                 }
             }

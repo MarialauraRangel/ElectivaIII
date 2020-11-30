@@ -42,6 +42,7 @@
 										<option value="">Seleccione</option>
 										<option value="1">Descuento Global</option>
 										<option value="2">Descuento por Categorías</option>
+										<option value="3">Descuento por Subcategorías</option>
 									</select>
 								</div>
 
@@ -64,7 +65,7 @@
 												{!! selectArray($categories, old('category_id')) !!}
 												@else
 												@foreach($categories as $category)
-												<option value="{{ $category->slug }}" @if(old('category_id')==$category->slug) selected @endif>{{ $category->name }}</option>
+												<option value="{{ $category->slug }}">{{ $category->name }}</option>
 												@endforeach
 												@endif
 											</select>
@@ -73,6 +74,29 @@
 										<div class="form-group col-lg-6 col-md-6 col-12">
 											<label class="col-form-label">Descuento de Categorías<b class="text-danger">*</b></label>
 											<input class="form-control discount @error('category_discount') is-invalid @enderror" name="category_discount" required disabled placeholder="Introduzca un descuento" value="{{ $setting->discount }}">
+										</div>
+									</div>
+								</div>
+
+								<div class="col-12 d-none" id="subcategoryDiscount">
+									<div class="row">
+										<div class="form-group col-lg-6 col-md-6 col-12">
+											<label class="col-form-label">Subcategorías<b class="text-danger">*</b></label>
+											<select class="form-control select2 @error('subcategory_id') is-invalid @enderror" name="subcategory_id[]" required disabled multiple>
+												<option value="">Seleccione</option>
+												@if(!is_null(old('subcategory_id')))
+												{!! selectSubcategories($subcategories, old('subcategory_id')) !!}
+												@else
+												@foreach($subcategories as $subcategory)
+												<option value="{{ $subcategory->slug }}">{{ $subcategory->category->name."/".$subcategory->name }}</option>
+												@endforeach
+												@endif
+											</select>
+										</div>
+
+										<div class="form-group col-lg-6 col-md-6 col-12">
+											<label class="col-form-label">Descuento de Subcategorías<b class="text-danger">*</b></label>
+											<input class="form-control discount @error('subcategory_discount') is-invalid @enderror" name="subcategory_discount" required disabled placeholder="Introduzca un descuento" value="{{ $setting->discount }}">
 										</div>
 									</div>
 								</div>

@@ -27,14 +27,20 @@ class DiscountUpdateRequest extends FormRequest
     {
         if ($this->type==1) {
             return [
-                'type' => 'required|'.Rule::in([1, 2]),
+                'type' => 'required|'.Rule::in([1, 2, 3]),
                 'discount' => 'required|integer|min:0|max:100'
+            ];
+        } elseif ($this->type==2) {
+            return [
+                'type' => 'required|'.Rule::in([1, 2, 3]),
+                'category_id' => 'required',
+                'category_discount' => 'required|integer|min:0|max:100',
             ];
         } else {
             return [
-                'type' => 'required|'.Rule::in([1, 2]),
-                'category_id' => 'required',
-                'category_discount' => 'required|integer|min:0|max:100',
+                'type' => 'required|'.Rule::in([1, 2, 3]),
+                'subcategory_id' => 'required',
+                'subcategory_discount' => 'required|integer|min:0|max:100',
             ];
         }
     }

@@ -649,17 +649,22 @@ $('.removeImage').click(function(event) {
 // Cambiar tipo de descuento
 $('#typeDiscount').change(function(event) {
   if ($(this).val()==1) {
-    $('#categoryDiscount').addClass('d-none');
-    $('#categoryDiscount input, #categoryDiscount select').attr('disabled', true);
+    $('#categoryDiscount, #subcategoryDiscount').addClass('d-none');
+    $('#categoryDiscount input, #categoryDiscount select, #subcategoryDiscount input, #subcategoryDiscount select').attr('disabled', true);
     $('#globalDiscount input').attr('disabled', false);
     $('#globalDiscount').removeClass('d-none');
   } else if ($(this).val()==2) {
-    $('#globalDiscount').addClass('d-none');
-    $('#globalDiscount input').attr('disabled', true);
+    $('#globalDiscount, #subcategoryDiscount').addClass('d-none');
+    $('#globalDiscount input, #subcategoryDiscount input, #subcategoryDiscount select').attr('disabled', true);
     $('#categoryDiscount input, #categoryDiscount select').attr('disabled', false);
     $('#categoryDiscount').removeClass('d-none');
-  } else {
+  } else if ($(this).val()==3) {
     $('#globalDiscount, #categoryDiscount').addClass('d-none');
     $('#globalDiscount input, #categoryDiscount input, #categoryDiscount select').attr('disabled', true);
+    $('#subcategoryDiscount input, #subcategoryDiscount select').attr('disabled', false);
+    $('#subcategoryDiscount').removeClass('d-none');
+  } else {
+    $('#globalDiscount, #categoryDiscount, #subcategoryDiscount').addClass('d-none');
+    $('#globalDiscount input, #categoryDiscount input, #categoryDiscount select, #subcategoryDiscount input, #subcategoryDiscount select').attr('disabled', true);
   }
 });

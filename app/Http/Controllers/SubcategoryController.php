@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Category;
 use App\Subcategory;
+use App\ProductSubcategory;
 use App\Http\Requests\SubcategoryStoreRequest;
 use App\Http\Requests\SubcategoryUpdateRequest;
 use Illuminate\Http\Request;
@@ -115,6 +116,8 @@ class SubcategoryController extends Controller
         $subcategory->delete();
 
         if ($subcategory) {
+            ProductSubcategory::where('subcategory_id', $subcategory->id)->delete();
+
             return redirect()->route('subcategorias.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Eliminación exitosa', 'msg' => 'La subcategoría ha sido eliminada exitosamente.']);
         } else {
             return redirect()->route('subcategorias.index')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Eliminación fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
@@ -122,17 +125,10 @@ class SubcategoryController extends Controller
     }
 
     public function addSubcategories(Request $request) {
-        $num=0;
-        $subcategoriesSelect=[];
         $category=Category::where('slug', request('slug'))->first();
         if (!is_null($category)) {
-            $subcategories=Subcategory::where('category_id', $category->id)->orderBy('name', 'DESC')->get();   
-            foreach ($subcategories as $subcategory) {
-                $subcategoriesSelect[$num]=['slug' => $subcategory->slug, 'name' => $subcategory->name];
-                $num++;
-            }
-
-            return response()->json(["state" => true, "data" => $subcategoriesSelect]);
+            $subcategories=$category->subcategories()->select("name", "slug")->orderBy('name', 'DESC')->get();
+            return response()->json(["state" => true, "data" => $subcategories]);
         }
 
         return response()->json(["state" => false]);
