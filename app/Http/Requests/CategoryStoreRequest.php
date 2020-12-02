@@ -22,8 +22,10 @@ class CategoryStoreRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        $category=Category::where('slug', Str::slug($this->name))->withTrashed()->exists();
-        ($category) ? $this->merge(['exist' => true]) : $this->merge(['exist' => false]);
+        $trashed=Category::where('slug', Str::slug($this->name))->withTrashed()->exists();
+        $exist=Category::where('slug', Str::slug($this->name))->exists();
+        ($trashed) ? $this->merge(['trashed' => true]) : $this->merge(['trashed' => false]);
+        ($exist) ? $this->merge(['exist' => true]) : $this->merge(['exist' => false]);
     }
 
     /**
@@ -33,7 +35,7 @@ class CategoryStoreRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->exist) {
+        if ($this->trashed && $this->exist===false) {
             $category=Category::where('slug', Str::slug($this->name))->withTrashed()->first();
             $category->restore();
         }

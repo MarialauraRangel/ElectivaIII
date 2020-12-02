@@ -8,17 +8,7 @@
 
 @section('content')
 
-<div class="hero-wrap hero-bread" style="background-image: url('web/images/bg_2.jpg');">
-	<div class="overlay"></div>
-	<div class="container">
-		<div class="row no-gutters slider-text align-items-center justify-content-center">
-			<div class="col-md-9 text-center">
-				<p class="breadcrumbs"><span class="mr-2"><a href="{{ route('home') }}">Inicio</a></span> <i class="fa fa-angle-right mx-2"></i> <span>Contacto</span></p>
-				<h1 class="mb-0 bread text-serif">Contacto</h1>
-			</div>
-		</div>
-	</div>
-</div>
+@include('web.partials.banner', ['title' => 'Contacto', 'banner' => $setting->banner])
 
 <section class="ftco-section pt-4">
 	<div class="container">
@@ -39,11 +29,11 @@
 							<p class="h3 text-serif font-weight-bold">Contactános</p>
 						</div>
 
-						<div class="form-group col-xl-6 col-lg-6 col-md-6 col-12">
+						<div class="form-group col-lg-6 col-md-6 col-12">
 							<input class="form-control @error('name') is-invalid @enderror" type="text" name="name" required placeholder="Introduzca un nombre" value="{{ old('name') }}">
 						</div>
 
-						<div class="form-group col-xl-6 col-lg-6 col-md-6 col-12">
+						<div class="form-group col-lg-6 col-md-6 col-12">
 							<input class="form-control @error('email') is-invalid @enderror" type="email" name="email" required placeholder="Introduzca un correo electrónico" value="{{ old('email') }}">
 						</div>
 

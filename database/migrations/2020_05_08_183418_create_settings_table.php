@@ -26,6 +26,7 @@ class CreateSettingsTable extends Migration
             $table->string('twitter')->nullable();
             $table->string('instagram')->nullable();
             $table->integer('discount')->default(0);
+            $table->string('banner')->nullable();
             $table->timestamps();
         });
     }

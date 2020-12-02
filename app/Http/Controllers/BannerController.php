@@ -50,17 +50,18 @@ class BannerController extends Controller
             } else {
                 if (request('button')==1) {
                     $pre_url=request('pre_url');
+                    $url=str_replace(['https://', 'http://'], "", request('url'));
                     if (!empty(request('target'))) {
                         $target=request('target');
                     } else {
-                        $target=0;
+                        $target="0";
                     }
                 } else {
                     $pre_url=NULL;
-                    $target=0;
+                    $target="0";
+                    $url=NULL;
                 }
-
-                $data=array('title' => request('title'), 'slug' => $slug, 'text' => request('text'), 'button' => request('button'), 'button_text' => request('button_text'), 'pre_url' => $pre_url, 'url' => request('url'), 'target' => $target, 'state' => request('state'));
+                $data=array('title' => request('title'), 'slug' => $slug, 'text' => request('text'), 'button' => request('button'), 'button_text' => request('button_text'), 'pre_url' => $pre_url, 'url' => $url, 'target' => $target, 'state' => request('state'));
                 break;
             }
         }
@@ -103,17 +104,19 @@ class BannerController extends Controller
         $banner=Banner::where('slug', $slug)->firstOrFail();
         if (request('button')==1) {
             $pre_url=request('pre_url');
+            $url=str_replace(['https://', 'http://'], "", request('url'));
             if (!empty(request('target'))) {
                 $target=request('target');
             } else {
-                $target=0;
+                $target="0";
             }
         } else {
             $pre_url=NULL;
-            $target=0;
+            $target="0";
+            $url=NULL;
         }
 
-        $data=array('title' => request('title'), 'slug' => $slug, 'text' => request('text'), 'button' => request('button'), 'button_text' => request('button_text'), 'pre_url' => $pre_url, 'url' => request('url'), 'target' => $target, 'state' => request('state'));
+        $data=array('title' => request('title'), 'slug' => $slug, 'text' => request('text'), 'button' => request('button'), 'button_text' => request('button_text'), 'pre_url' => $pre_url, 'url' => $url, 'target' => $target, 'state' => request('state'));
 
         // Mover imagen a carpeta banners y extraer nombre
         if ($request->hasFile('image')) {

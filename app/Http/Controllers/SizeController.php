@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Size;
+use App\ProductSize;
 use App\Http\Requests\SizeStoreRequest;
 use App\Http\Requests\SizeUpdateRequest;
 use Illuminate\Http\Request;
@@ -109,6 +110,8 @@ class SizeController extends Controller
         $size->delete();
 
         if ($size) {
+            ProductSize::where('size_id', $size->id)->delete();
+
             return redirect()->route('tallas.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Eliminación exitosa', 'msg' => 'La talla ha sido eliminada exitosamente.']);
         } else {
             return redirect()->route('tallas.index')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Eliminación fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);

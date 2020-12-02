@@ -18,12 +18,16 @@ label.error {
 }
 
 .text-serif {
-  font-family: "sans-serif" !important;
+  font-family: "Helvetica Neue" !important;
 }
 
-.nav-link {
-  font-size: 14px !important;
-  text-transform: unset !important;
+.nav-item .btn.btn-primary {
+  font-size: .75rem !important;
+}
+
+.ftco-navbar-light .navbar-nav > .nav-item > .nav-link {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
 }
 
 .ftco-navbar-light .navbar-nav > .nav-item > .nav-link:hover {
@@ -70,6 +74,10 @@ img.zoom:hover, .overflow-hidden:hover img.zoom {
 
 .right-n-5 {
   right: -5px;
+}
+
+.border-5 {
+  border-width: 5px;
 }
 
 #banner .main-banner .carousel-inner, #banner .main-banner .carousel-inner img {

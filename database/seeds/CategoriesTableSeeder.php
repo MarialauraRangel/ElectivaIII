@@ -12,7 +12,7 @@ class CategoriesTableSeeder extends Seeder
     public function run()
     {
         $categories = [
-            ['id' => 1, 'name' => 'Sin Categoría', 'slug' => 'sin-categoria'],
+            ['id' => 1, 'name' => 'Abarrotes', 'slug' => 'abarrotes'],
             ['id' => 2, 'name' => 'Despensa', 'slug' => 'despensa'],
             ['id' => 3, 'name' => 'Jugos y Bebidas', 'slug' => 'jugos-y-bebidas'],
             ['id' => 4, 'name' => 'Vinos, Licores y Cervezas', 'slug' => 'vinos-licores-y-cerveras'],

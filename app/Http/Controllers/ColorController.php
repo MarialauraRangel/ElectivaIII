@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Color;
+use App\ColorProduct;
 use App\Http\Requests\ColorStoreRequest;
 use App\Http\Requests\ColorUpdateRequest;
 use Illuminate\Http\Request;
@@ -104,6 +105,8 @@ class ColorController extends Controller
         $color->delete();
 
         if ($color) {
+            ColorProduct::where('color_id', $color->id)->delete();
+
             return redirect()->route('colores.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Eliminación exitosa', 'msg' => 'El color ha sido eliminado exitosamente.']);
         } else {
             return redirect()->route('colores.index')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Eliminación fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);

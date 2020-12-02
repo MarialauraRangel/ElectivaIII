@@ -19,11 +19,13 @@ class SubcategoryStoreRequest extends FormRequest
     {
         return true;
     }
-
+    
     protected function prepareForValidation()
     {
-        $subcategory=Subcategory::where('slug', Str::slug($this->name))->withTrashed()->exists();
-        ($subcategory) ? $this->merge(['exist' => true]) : $this->merge(['exist' => false]);
+        $trashed=Subcategory::where('slug', Str::slug($this->name))->withTrashed()->exists();
+        $exist=Subcategory::where('slug', Str::slug($this->name))->exists();
+        ($trashed) ? $this->merge(['trashed' => true]) : $this->merge(['trashed' => false]);
+        ($exist) ? $this->merge(['exist' => true]) : $this->merge(['exist' => false]);
     }
 
     /**
@@ -33,7 +35,7 @@ class SubcategoryStoreRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->exist) {
+        if ($this->trashed && $this->exist===false) {
             $subcategory=Subcategory::where('slug', Str::slug($this->name))->withTrashed()->first();
             $subcategory->restore();
         }

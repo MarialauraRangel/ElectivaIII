@@ -122,9 +122,16 @@ class SettingController extends Controller
     }
 
     public function updateContacts(ContactUpdateRequest $request) {
-
         $setting=Setting::where('id', 1)->firstOrFail();
-        $setting->fill($request->all())->save();
+        $data=array('map' => request('map'), 'phone' => request('phone'), 'email' => request('email'), 'address' => request('address'), 'facebook' => request('facebook'), 'twitter' => request('twitter'), 'instagram' => request('instagram'));
+
+        // Mover imagen a carpeta settings y extraer nombre
+        if ($request->hasFile('banner')) {
+            $file=$request->file('banner');
+            $data['banner']=store_files($file, 'banner-secundario', '/admins/img/settings/');
+        }
+
+        $setting->fill($data)->save();
 
         if ($setting) {
             return redirect()->route('contactos.edit')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'Los ajustes de contacto han sido editados exitosamente.']);

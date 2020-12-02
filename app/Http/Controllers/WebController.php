@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Setting;
+use App\User;
 use App\Banner;
 use App\Product;
 use App\Color;
@@ -14,7 +16,7 @@ use App\Payment;
 use App\Transfer;
 use App\Order;
 use App\Item;
-use App\Setting;
+use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\CartAddProductRequest;
 use App\Http\Requests\CartQtyProductRequest;
 use App\Http\Requests\SaleStoreRequest;
@@ -26,41 +28,53 @@ use Auth;
 
 class WebController extends Controller
 {
+    private $categories, $setting;
+
+    public function __construct()
+    {
+        $this->categories=Category::orderBy('name', 'ASC')->get();
+        $this->setting=Setting::first();
+    }
+
     public function index() {
+        $categories_menu=$this->categories;
     	$products=Product::where([['qty', '>', 0], ['state', '1']])->orderBy('id', 'DESC')->limit(8)->get();
         $banners=Banner::where('state', '1')->get();
         $num=0;
-        return view('web.home', compact('banners', 'products', 'num'));
+        return view('web.home', compact('categories_menu', 'banners', 'products', 'num'));
     }
 
     public function about() {
-        $setting=Setting::first();
-        return view('web.about', compact('setting'));
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
+        return view('web.about', compact('categories_menu', 'setting'));
     }
 
     public function shop(Request $request) {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
         $categories=Category::all();
         $subcategories=[];
         
         if ($request->has('page')) {
-            $offset=20*(request('page')-1);
+            $offset=24*(request('page')-1);
         } else {
             $offset=0;
         }
 
         if (is_null(request('category'))) {
-            $products=Product::where('qty', '>', 0)->where('state', "1")->orderBy('id', 'DESC')->offset($offset)->limit(20)->get();
-            $total=Product::where('qty', '>', 0)->where('state', "1")->get();
+            $products=Product::where('qty', '>', 0)->where('state', "1")->orderBy('id', 'DESC')->offset($offset)->limit(24)->get();
+            $total=Product::where('qty', '>', 0)->where('state', "1")->limit(200)->get();
         } else {
             $category=Category::where('slug', request('category'))->firstOrFail();
             $subcategories=$category->subcategories;
             if (is_null(request('subcategory'))) {
-                $products=$category->subcategories()->with('products')->get()->pluck('products')->collapse()->unique('id')->values()->where('qty', '>', 0)->where('state', "1")->slice($offset)->take(20)->sortByDesc('id');
-                $total=$category->subcategories()->with('products')->get()->pluck('products')->collapse()->unique('id')->values()->where('qty', '>', 0)->where('state', "1");
+                $products=$category->subcategories()->with('products')->get()->pluck('products')->collapse()->unique('id')->values()->where('qty', '>', 0)->where('state', "1")->slice($offset)->take(24)->sortByDesc('id');
+                $total=$category->subcategories()->with('products')->get()->pluck('products')->collapse()->unique('id')->values()->where('qty', '>', 0)->where('state', "1")->take(200);
             } else {
                 $subcategory=Subcategory::where('slug', request('subcategory'))->firstOrFail();
-                $products=$subcategory->products->where('qty', '>', 0)->where('state', "1")->slice($offset)->take(20)->sortByDesc('id');
-                $total=$subcategory->products->where('qty', '>', 0)->where('state', "1");
+                $products=$subcategory->products->where('qty', '>', 0)->where('state', "1")->slice($offset)->take(24)->sortByDesc('id');
+                $total=$subcategory->products->where('qty', '>', 0)->where('state', "1")->take(200);
             }
         }
 
@@ -75,23 +89,39 @@ class WebController extends Controller
 
         $varPage='page';
         $page=Paginator::resolveCurrentPage($varPage);
-        $pagination=new LengthAwarePaginator($products, $total=count($total), $perPage = 20, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $varPage]);
+        $pagination=new LengthAwarePaginator($products, $total=count($total), $perPage = 24, $page, ['path' => Paginator::resolveCurrentPath(), 'pageName' => $varPage]);
 
-        return view('web.shop', compact('products', 'categories', 'subcategories', 'pagination', 'search'));
+        return view('web.shop', compact('categories_menu', 'setting', 'products', 'categories', 'subcategories', 'pagination', 'search'));
     }
 
     public function product($slug) {
+        $categories_menu=$this->categories;
         $product=Product::where('slug', $slug)->firstOrFail();
         $products=Product::where([['id', '!=', $product->id], ['qty', '>', 0], ['state', '1']])->limit(4)->get();
-        return view('web.product', compact('product', 'products'));
+        return view('web.product', compact('categories_menu', 'product', 'products'));
     }
 
     public function contact() {
-        $setting=Setting::first();
-        return view('web.contact', compact('setting'));
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
+        return view('web.contact', compact('categories_menu', 'setting'));
+    }
+
+    public function terms() {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
+        return view('web.terms', compact('categories_menu', 'setting'));
+    }
+
+    public function privacity() {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
+        return view('web.privacity', compact('categories_menu', 'setting'));
     }
 
     public function cart(Request $request) {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
         $total=0;
         $products=[];
         if ($request->session()->has('cart')) {
@@ -138,7 +168,7 @@ class WebController extends Controller
             }
         }
 
-        return view('web.cart', compact("products", "total"));
+        return view('web.cart', compact('categories_menu', 'setting', "products", "total"));
     }
 
     public function cartAdd(CartAddProductRequest $request) {
@@ -258,6 +288,7 @@ class WebController extends Controller
 
     public function checkout(Request $request)
     {
+        $categories_menu=$this->categories;
         $total=0;
         $products=[];
         if ($request->session()->has('cart')) {
@@ -296,87 +327,57 @@ class WebController extends Controller
                 }
             }
 
-            return view('web.checkout', compact('total'));
+            return view('web.checkout', compact('categories_menu', 'total'));
         }
 
         return redirect()->route('cart.index');
     }
 
-    public function pay(SaleStoreRequest $request) {
-        $total=0;
-        foreach (session('cart') as $item) {
-            $total+=floatval($item['subtotal']);
-        }
-
-        // Validación para que no se repita el slug
-        $slug="pago";
-        $num=0;
-        while (true) {
-            $count2=Payment::where('slug', $slug)->count();
-            if ($count2>0) {
-                $slug="pago-".$num;
-                $num++;
-            } else {
-                if (request('method')==1) {
-                    $state=2;
-                } else {
-                    $state=1;
-                }
-                $data=array('slug' => $slug, 'subject' => 'Compra en línea', 'total' => $total, 'method' => request('method'), 'currency' => 'USD', 'state' => $state, 'user_id' => Auth::user()->id); 
-                break;
-            }
-
-        }
-
-        $payment=Payment::create($data);
-
-        if (request('method')==1) {
-            $data=array('reference' => request('reference'), 'payment_id' => $payment->id);
-            Transfer::create($data);
-        }
-
-        // Validación para que no se repita el slug
-        $slug="pedido";
-        $num=0;
-        while (true) {
-            $count2=Order::where('slug', $slug)->count();
-            if ($count2>0) {
-                $slug="pedido-".$num;
-                $num++;
-            } else {
-                $data=array('slug' => $slug, 'total' => $total, 'phone' => request('phone'), 'address' => request('address'), 'state' => $state, 'user_id' => Auth::user()->id, 'payment_id' => $payment->id); 
-                break;
-            }
-
-        }
-
-        $order=Order::create($data);
-
-        foreach (session('cart') as $item) {
-            $size_id=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->first()->id : NULL;
-            $color_id=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->first()->id : NULL;
-
-            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $item['product']->id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
-            Item::create($data)->save();
-        }
-
-        if ($order) {
-            $request->session()->forget('cart');
-            return redirect()->route('orders')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
-        } else {
-            return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
-        }
-    }
-
-    public function orders() {
+    public function profile() {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
         $orders=Order::where('user_id', Auth::user()->id)->orderBy('id', 'DESC')->get();
         $num=1;
-        return view('web.orders', compact('orders', 'num'));
+        return view('web.profile', compact('categories_menu', 'setting', 'orders', 'num'));
+    }
+
+    public function profileUpdate(ProfileUpdateRequest $request) {
+        $user=User::where('slug', Auth::user()->slug)->firstOrFail();
+        $data=array('name' => request('name'), 'lastname' => request('lastname'), 'phone' => request('phone'));
+
+        if (!is_null(request('password'))) {
+            $data['password']=Hash::make(request('password'));
+        }
+
+        // Mover imagen a carpeta admins y extraer nombre
+        if ($request->hasFile('photo')) {
+            $file=$request->file('photo');
+            $data['photo']=store_files($file, $slug, '/admins/img/admins/');
+        }
+
+        $user->fill($data)->save();
+
+        if ($user) {
+            if ($request->hasFile('photo')) {
+                Auth::user()->photo=$data['photo'];
+            }
+            Auth::user()->name=request('name');
+            Auth::user()->lastname=request('lastname');
+            Auth::user()->phone=request('phone');
+            if (!is_null(request('password'))) {
+                Auth::user()->password=Hash::make(request('password'));
+            }
+            return redirect()->back()->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'El perfil ha sido editado exitosamente.']);
+        } else {
+            return redirect()->back()->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Edición fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.'])->withInputs();
+        }
     }
 
     public function order($slug) {
+        $categories_menu=$this->categories;
+        $setting=$this->setting;
         $order=Order::where('slug', $slug)->firstOrFail();
         $num=1;
-        return view('web.order', compact('order', 'num'));
+        return view('web.order', compact('categories_menu', 'setting', 'order', 'num'));
     }
 }

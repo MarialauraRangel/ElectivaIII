@@ -169,7 +169,6 @@ return [
         Jenssegers\Agent\AgentServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
-        Srmklive\Paypal\Providers\PaypalServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -235,7 +234,6 @@ return [
         'Agent' => Jenssegers\Agent\Facades\Agent::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
-        'Paypal' => Srmklive\Paypal\Facades\Paypal::class,
     ],
 
 ];

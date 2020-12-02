@@ -985,6 +985,10 @@ $(document).ready(function(){
 		$("#formContact").validate({
 			rules:
 			{
+				banner: {
+					required: false
+				},
+
 				map: {
 					required: false,
 					minlength: 50,

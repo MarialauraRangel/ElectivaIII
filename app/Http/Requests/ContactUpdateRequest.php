@@ -26,6 +26,7 @@ class ContactUpdateRequest extends FormRequest
     public function rules()
     {
         return [
+            'banner' => 'nullable|file|mimetypes:image/*',
             'map' => 'nullable|string|min:50|max:1000',
             'phone' => 'nullable|string|min:5|max:20',
             'email' => 'nullable|string|email|max:191',

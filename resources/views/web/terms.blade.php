@@ -1,16 +1,16 @@
 @extends('layouts.web')
 
-@section('title', 'Nosotros')
+@section('title', 'Términos y Condiciones')
 
 @section('content')
 
-@include('web.partials.banner', ['title' => 'Nosotros', 'banner' => $setting->banner])
+@include('web.partials.banner', ['title' => 'Términos y Condiciones', 'banner' => $setting->banner])
 
 <section class="ftco-section pt-5">
 	<div class="container">
 		<div class="row">
 			<div class="col-12 h4 text-serif">
-				{!! $setting->about !!}
+				{!! $setting->terms !!}
 			</div>
 		</div>
 	</div>

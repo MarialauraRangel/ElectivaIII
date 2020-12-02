@@ -26,7 +26,7 @@
 								<div class="card bg-secondary">
 									<div class="card-body">
 										<h5 class="card-text text-white text-center font-weight-bold">Usuarios</h5>
-										<h2 class="text-white text-center font-weight-bold">0</h2>
+										<h2 class="text-white text-center font-weight-bold">{{ $users }}</h2>
 									</div>
 								</div>
 							</div>
@@ -35,7 +35,7 @@
 								<div class="card bg-dark">
 									<div class="card-body">
 										<h5 class="card-text text-white text-center font-weight-bold">Productos</h5>
-										<h2 class="text-white text-center font-weight-bold">0</h2>
+										<h2 class="text-white text-center font-weight-bold">{{ $products }}</h2>
 									</div>
 								</div>
 							</div>

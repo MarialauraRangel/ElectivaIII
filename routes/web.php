@@ -30,6 +30,8 @@ Route::get('/tienda', 'WebController@shop')->name('shop');
 Route::get('/producto/{slug}', 'WebController@product')->name('product');
 Route::get('/contacto', 'WebController@contact')->name('contact');
 Route::post('/contacto', 'SettingController@send')->name('contact.send');
+Route::get('/terminos-y-condiciones', 'WebController@terms')->name('terms');
+Route::get('/politicas-de-privacidad', 'WebController@privacity')->name('privacity');
 Route::get('/carrito', 'WebController@cart')->name('cart.index');
 Route::post('/carrito', 'WebController@cartAdd')->name('cart.add');
 Route::post('/carrito/quitar', 'WebController@cartRemove')->name('cart.remove');
@@ -38,8 +40,9 @@ Route::get('/comprar', 'WebController@checkout')->name('checkout');
 Route::post('/comprar', 'WebController@pay')->name('pay');
 
 Route::group(['middleware' => ['auth']], function () {
-	Route::get('/compras', 'WebController@orders')->name('orders');
-	Route::get('/compras/{slug}', 'WebController@order')->name('order');
+	Route::get('/perfil', 'WebController@profile')->name('web.profile');
+	Route::put('/perfil', 'WebController@profileUpdate')->name('web.profile.update');
+	Route::get('/perfil/compras/{slug}', 'WebController@order')->name('order');
 });
 
 Route::group(['middleware' => ['auth', 'admin']], function () {

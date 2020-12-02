@@ -85,7 +85,7 @@
             <div class="modal-body vh-70 overflow-scroll">
                 <div class="row">
                     <div class="col-12">
-                        {{-- {!! $setting->terms !!} --}}
+                        {!! $setting->terms !!}
                     </div>
                 </div>
             </div>

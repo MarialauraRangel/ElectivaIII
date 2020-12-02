@@ -1,8 +1,11 @@
 @extends('layouts.web')
 
-@section('title', 'Detalle de la Compra')
+@section('title', 'Detalles de Compra')
 
 @section('content')
+
+@include('web.partials.banner', ['title' => 'Detalles de Compra', 'banner' => $setting->banner])
+
 <section class="ftco-section bg-light ftco-no-pt">
 	<div class="container">
 		<div class="row">
@@ -50,7 +53,7 @@
 						</div>
 
 						<div class="col-12">
-							<a href="{{ route('orders') }}" class="btn btn-dark">Volver</a>
+							<a href="{{ route('web.profile') }}" class="btn btn-dark">Volver</a>
 						</div>
 					</div>
 				</div>
