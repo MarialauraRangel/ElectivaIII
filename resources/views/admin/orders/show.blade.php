@@ -26,7 +26,7 @@
 					<div class="">
 						<ul class="contacts-block list-unstyled mw-100 mx-2">
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Teléfono:</b> {{ $order->phone }}</span>
+								<span class="h6 text-black"><b>Teléfono:</b> @if(!is_null($order->user->phone) && !empty($order->user->phone)){{ $order->user->phone }}@else{{ $order->phone }}@endif</span>
 							</li>
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Email:</b> {{ $order->user->email }}</span>
@@ -158,6 +158,12 @@
 							@endif
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Total:</b> {{ "$".number_format($order->payment->total, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Comisión:</b> <b class="text-danger">{{ "-$".number_format($order->payment->fee, 2, ",", ".") }}</b></span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Balance:</b> {{ "$".number_format($order->payment->balance, 2, ",", ".") }}</span>
 							</li>
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Estado:</b> {!! statePayment($order->payment->state) !!}</span>

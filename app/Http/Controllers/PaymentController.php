@@ -2,22 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Product;
+use App\Color;
+use App\Size;
+use App\Item;
+use App\Order;
 use App\Payment;
+use App\Paypal;
+use App\Transfer;
 use Illuminate\Http\Request;
+use App\Http\Requests\SaleStoreRequest;
+use PayPal\Api\Payer;
+use PayPal\Api\Amount;
+use PayPal\Api\Transaction;
+use PayPal\Rest\ApiContext;
+use PayPal\Api\RedirectUrls;
+use PayPal\Api\PaymentExecution;
+use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Api\Payment as PaymentPaypal;
+use PayPal\Exception\PayPalConnectionException;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
-use Srmklive\PayPal\Services\AdaptivePayments;
-use Srmklive\PayPal\Services\ExpressCheckout;
+use Auth;
 
 class PaymentController extends Controller
 {
-    /**
-     * @var ExpressCheckout
-     */
-    protected $provider;
+    private $apiContext;
 
     public function __construct()
     {
-        $this->provider=new ExpressCheckout();
+        $configPaypal=Config::get('paypal');
+        $this->apiContext=new ApiContext(
+            new OAuthTokenCredential(
+                $configPaypal['client_id'],
+                $configPaypal['secret']
+            )
+        );
     }
 
     /**
@@ -55,7 +75,6 @@ class PaymentController extends Controller
     }
 
     public function activate(Request $request, $slug) {
-
         $payment=Payment::where('slug', $slug)->firstOrFail();
         $payment->fill(['state' => "1"])->save();
 
@@ -66,175 +85,107 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    public function getExpressCheckout(Request $request)
-    {
-        $recurring=($request->get('mode')==='recurring') ? true : false;
-        $cart=$this->getCheckoutData($recurring);
-
-        try {
-            $response=$this->provider->setExpressCheckout($cart, $recurring);
-
-            return redirect($response['paypal_link']);
-        } catch (\Exception $e) {
-            $invoice = $this->createInvoice($cart, 'Invalid');
-
-            session()->put(['code' => 'danger', 'message' => "Error processing PayPal payment for Order $invoice->id!"]);
-        }
-    }
-
-    /**
-     * Set cart data for processing payment on PayPal.
-     *
-     * @param bool $recurring
-     *
-     * @return array
-     */
-    protected function getCheckoutData($recurring = false)
-    {
-        $data = [];
-
-        $order_id = Invoice::all()->count() + 1;
-
-        if ($recurring === true) {
-            $data['items'] = [
-                [
-                    'name'  => 'Monthly Subscription '.config('paypal.invoice_prefix').' #'.$order_id,
-                    'price' => 0,
-                    'qty'   => 1,
-                ],
-            ];
-
-            $data['return_url'] = url('/paypal/ec-checkout-success?mode=recurring');
-            $data['subscription_desc'] = 'Monthly Subscription '.config('paypal.invoice_prefix').' #'.$order_id;
-        } else {
-            $data['items'] = [
-                [
-                    'name'  => 'Product 1',
-                    'price' => 9.99,
-                    'qty'   => 1,
-                ],
-                [
-                    'name'  => 'Product 2',
-                    'price' => 4.99,
-                    'qty'   => 2,
-                ],
-            ];
-
-            $data['return_url'] = url('/paypal/ec-checkout-success');
-        }
-
-        $data['invoice_id'] = config('paypal.invoice_prefix').'_'.$order_id;
-        $data['invoice_description'] = "Order #$order_id Invoice";
-        $data['cancel_url'] = url('/');
-
-        $total = 0;
-        foreach ($data['items'] as $item) {
-            $total += $item['price'] * $item['qty'];
-        }
-
-        $data['total'] = $total;
-
-        return $data;
-    }
-
-    /**
-     * Process payment on PayPal.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function getExpressCheckoutSuccess(Request $request)
-    {
-        $recurring = ($request->get('mode') === 'recurring') ? true : false;
-        $token = $request->get('token');
-        $PayerID = $request->get('PayerID');
-
-        $cart = $this->getCheckoutData($recurring);
-
-        // Verify Express Checkout Token
-        $response = $this->provider->getExpressCheckoutDetails($token);
-
-        if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
-            if ($recurring === true) {
-                $response = $this->provider->createMonthlySubscription($response['TOKEN'], 9.99, $cart['subscription_desc']);
-                if (!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile', 'PendingProfile'])) {
-                    $status = 'Processed';
-                } else {
-                    $status = 'Invalid';
-                }
-            } else {
-                // Perform transaction on PayPal
-                $payment_status = $this->provider->doExpressCheckoutPayment($cart, $token, $PayerID);
-                $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
-            }
-
-            $invoice = $this->createInvoice($cart, $status);
-
-            if ($invoice->paid) {
-                session()->put(['code' => 'success', 'message' => "Order $invoice->id has been paid successfully!"]);
-            } else {
-                session()->put(['code' => 'danger', 'message' => "Error processing PayPal payment for Order $invoice->id!"]);
-            }
-
-            return redirect('/');
-        }
-    }
-
-    /**
-     * Create invoice.
-     *
-     * @param array  $cart
-     * @param string $status
-     *
-     * @return \App\Invoice
-     */
-    protected function createInvoice($cart, $status)
-    {
-        $invoice = new Invoice();
-        $invoice->title = $cart['invoice_description'];
-        $invoice->price = $cart['total'];
-        if (!strcasecmp($status, 'Completed') || !strcasecmp($status, 'Processed')) {
-            $invoice->paid = 1;
-        } else {
-            $invoice->paid = 0;
-        }
-        $invoice->save();
-
-        collect($cart['items'])->each(function ($product) use ($invoice) {
-            $item = new Item();
-            $item->invoice_id = $invoice->id;
-            $item->item_name = $product['name'];
-            $item->item_price = $product['price'];
-            $item->item_qty = $product['qty'];
-
-            $item->save();
-        });
-
-        return $invoice;
-    }
-
-
-
-
-
-
-
-
-
-
-
     public function pay(SaleStoreRequest $request) {
         $total=0;
         foreach (session('cart') as $item) {
             $total+=floatval($item['subtotal']);
         }
 
+        if (request('method')=='1') {
+            $data=array('total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'address' => request('address'));
+            $order=$this->storePayment($data, 'transfer', session('cart'));
+            if ($order) {
+                $request->session()->forget('cart');
+                return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
+            } else {
+                return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+            }
+
+        } elseif (request('method')=='2') {
+            $response=$this->payWithPaypal($total);
+            if ($response['status']) {
+                $request->session()->put('aditional_info', array(0 => ['phone' => request('phone'), 'address' => request('address')]));
+                return redirect()->away($response['url']);
+            } else {
+                return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+            }
+
+        } elseif (request('method')=='3') {
+            $data=array('total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'address' => request('address'));
+            $order=$this->storePayment($total, 'openpay', session('cart'));
+            if ($order) {
+                $request->session()->forget('cart');
+                return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
+            } else {
+                return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+            }
+        }
+
+        return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+    }
+
+    public function payWithPaypal($total) {
+        $payer=new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $amount=new Amount();
+        $amount->setTotal($total);
+        $amount->setCurrency('USD');
+
+        $transaction=new Transaction();
+        $transaction->setAmount($amount);
+        $transaction->setDescription('Compra en supertecpan.com');
+
+        $callbackUrlStatus=url('/paypal/estado');
+        $callbackUrlCancel=url('/paypal/cancelado');
+        $redirectUrls=new RedirectUrls();
+        $redirectUrls->setReturnUrl($callbackUrlStatus)
+        ->setCancelUrl($callbackUrlCancel);
+
+        $payment=new PaymentPaypal();
+        $payment->setIntent('sale')
+        ->setPayer($payer)
+        ->setTransactions(array($transaction))
+        ->setRedirectUrls($redirectUrls);
+
+        try {
+            $payment->create($this->apiContext);
+            return array('status' => true, 'url' => $payment->getApprovalLink());
+        } catch (PayPalConnectionException $e) {
+            return array('status' => false, 'message' => $e->getData());
+        }
+    }
+
+    public function paypalStatus(Request $request) {
+        if (!request()->has('paymentId') || !request()->has('PayerID') || !request()->has('token')) {
+            return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Pago Fallido', 'msg' => 'No se ha podido realizar el pago con Paypal, intentelo nuevamente.']);
+        }
+
+        $payment=PaymentPaypal::get(request('paymentId'), $this->apiContext);
+        $execution=new PaymentExecution();
+        $execution->setPayerId(request('PayerID'));
+        $result=$payment->execute($execution, $this->apiContext);
+        $balance=$result->transactions[0]->related_resources[0]->sale->amount->total-$result->transactions[0]->related_resources[0]->sale->transaction_fee->value;
+        
+        if ($result->getState()==='approved') {
+            $data=array('total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'address' => session('aditional_info')[0]['address']);
+            $order=$this->storePayment($data, 'paypal', session('cart'));
+            if ($order) {
+                $request->session()->forget('cart');
+                return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
+            } else {
+                return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => '´Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+            }
+        } else {
+            return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => '´Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
+        }
+    }
+
+    public function paypalCancel(Request $request) {
+        return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'warning', 'title' => 'Pago Cancelado', 'msg' => 'Has cancelado el pago con Paypal.']);
+    }
+
+    public function storePayment($data_array, $type, $cart) {
         // Validación para que no se repita el slug
         $slug="pago";
         $num=0;
@@ -244,22 +195,22 @@ class PaymentController extends Controller
                 $slug="pago-".$num;
                 $num++;
             } else {
-                if (request('method')==1) {
-                    $state=2;
-                } else {
-                    $state=1;
-                }
-                $data=array('slug' => $slug, 'subject' => 'Compra en línea', 'total' => $total, 'method' => request('method'), 'currency' => 'USD', 'state' => $state, 'user_id' => Auth::user()->id); 
+                $state=($type=="transfer") ? "2" : "1";
+                $data=array('slug' => $slug, 'subject' => 'Compra en supertecpan.com', 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'method' => $data_array['method'], 'currency' => $data_array['currency'], 'state' => $state, 'user_id' => Auth::user()->id);
                 break;
             }
-
         }
 
         $payment=Payment::create($data);
 
-        if (request('method')==1) {
-            $data=array('reference' => request('reference'), 'payment_id' => $payment->id);
+        if ($type=="transfer") {
+            $data=array('reference' => $data_array['reference'], 'payment_id' => $payment->id);
             Transfer::create($data);
+        }
+
+        if ($type=="paypal") {
+            $data=array('paypal_payer_id' => $data_array['paypal_payer_id'], 'paypal_payment_id' => $data_array['paypal_payment_id'], 'payment_id' => $payment->id);
+            Paypal::create($data);
         }
 
         // Validación para que no se repita el slug
@@ -271,7 +222,7 @@ class PaymentController extends Controller
                 $slug="pedido-".$num;
                 $num++;
             } else {
-                $data=array('slug' => $slug, 'total' => $total, 'phone' => request('phone'), 'address' => request('address'), 'state' => $state, 'user_id' => Auth::user()->id, 'payment_id' => $payment->id); 
+                $data=array('slug' => $slug, 'total' => $data_array['total'], 'phone' => $data_array['phone'], 'address' => $data_array['address'], 'state' => $state, 'user_id' => Auth::user()->id, 'payment_id' => $payment->id); 
                 break;
             }
 
@@ -279,19 +230,15 @@ class PaymentController extends Controller
 
         $order=Order::create($data);
 
-        foreach (session('cart') as $item) {
+        foreach ($cart as $item) {
+            $product_id=(!is_null($item['product'])) ? Product::where('slug', $item['product']->slug)->first()->id : NULL;
             $size_id=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->first()->id : NULL;
             $color_id=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->first()->id : NULL;
 
-            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $item['product']->id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
+            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $product_id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
             Item::create($data)->save();
         }
 
-        if ($order) {
-            $request->session()->forget('cart');
-            return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
-        } else {
-            return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
-        }
+        return $order;
     }
 }

@@ -18,6 +18,8 @@ class CreatePaymentsTable extends Migration
             $table->string('slug')->unique();
             $table->string('subject');
             $table->float('total', 10, 2)->default(0.00)->unsigned();
+            $table->float('fee', 10, 2)->default(0.00)->unsigned();
+            $table->float('balance', 10, 2)->default(0.00)->unsigned();
             $table->enum('method', [1, 2, 3])->default(1);
             $table->string('currency');
             $table->enum('state', [0, 1, 2])->default(2);

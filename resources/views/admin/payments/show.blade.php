@@ -68,6 +68,12 @@
 								<span class="h6 text-black"><b>Total:</b> {{ "$".number_format($payment->total, 2, ",", ".") }}</span>
 							</li>
 							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Comisión:</b> <b class="text-danger">{{ "-$".number_format($payment->fee, 2, ",", ".") }}</b></span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Balance:</b> {{ "$".number_format($payment->balance, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Estado:</b> {!! statePayment($payment->state) !!}</span>
 							</li>
 							<li class="contacts-block__item">

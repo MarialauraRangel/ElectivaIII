@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    protected $fillable = ['slug', 'subject', 'total', 'method', 'currency', 'state', 'user_id'];
+    protected $fillable = ['slug', 'subject', 'total', 'fee', 'balance', 'method', 'currency', 'state', 'user_id'];
 
     public function user() {
         return $this->belongsTo(User::class);
@@ -14,6 +14,10 @@ class Payment extends Model
 
     public function transfer() {
         return $this->hasOne(Transfer::class);
+    }
+
+    public function paypal() {
+        return $this->hasOne(Paypal::class);
     }
 
     public function order() {

@@ -19,6 +19,10 @@ use App\Notifications\MessageContactNotification;
 use App\Imports\ProductsImport;
 use Illuminate\Support\Str;
 use Excel;
+use App\Disease;
+use App\Operation;
+
+
 
 class SettingController extends Controller
 {
@@ -190,16 +194,9 @@ class SettingController extends Controller
         $num=1;
         $data="";
 
-        foreach ($collection[0]->where() as $item) {
-            
+        // dd($collection[0]->whereNotNull(0));
 
-
-
-
-
-
-
-
+        // foreach ($collection[0] as $item) {
 
             // Productos
             // if($item[0]!="CODIGO") {
@@ -226,7 +223,7 @@ class SettingController extends Controller
                 // $data.="['id' => ".$num.", 'name' => '".Str::ucfirst($item[1])."', 'slug' => '".$slug."', 'code' => '".$item[0]."', 'description' => 'description-product', 'qty' => 100, 'price' => ".$item[2].", 'discount' => ".$item[6].", 'min' => ".$item[11].", 'max' => ".$item[12].", 'state' => '1'],<br>";
                 // $num++;
             // }
-        }
+        // }
 
         // ini_set('max_execution_time', $max);
 

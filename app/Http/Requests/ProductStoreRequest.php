@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class ProductStoreRequest extends FormRequest
 {
@@ -18,6 +20,14 @@ class ProductStoreRequest extends FormRequest
     return true;
   }
 
+  protected function prepareForValidation()
+  {
+    $trashed=Product::where('slug', Str::slug($this->name))->withTrashed()->exists();
+    $exist=Product::where('slug', Str::slug($this->name))->exists();
+    ($trashed) ? $this->merge(['trashed' => true]) : $this->merge(['trashed' => false]);
+    ($exist) ? $this->merge(['exist' => true]) : $this->merge(['exist' => false]);
+  }
+
   /**
    * Get the validation rules that apply to the request.
    *
@@ -25,8 +35,12 @@ class ProductStoreRequest extends FormRequest
    */
   public function rules()
   {
+    if ($this->trashed && $this->exist===false) {
+      $product=Product::where('slug', Str::slug($this->name))->withTrashed()->first();
+      $product->restore();
+    }
     return [
-      'name' => 'required|string|min:2|max:191',
+      'name' => 'required|string|min:2|max:191|unique:products,name',
       'code' => 'required|string|min:2|max:191',
       'subcategory_id' => 'required|array',
       'color_id' => 'nullable|array',

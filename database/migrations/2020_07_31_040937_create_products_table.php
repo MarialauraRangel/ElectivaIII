@@ -26,6 +26,7 @@ class CreateProductsTable extends Migration
             $table->integer('max')->default(0);
             $table->enum('state', [0, 1])->default(1);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

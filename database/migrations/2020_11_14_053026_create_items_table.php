@@ -25,7 +25,7 @@ class CreateItemsTable extends Migration
             $table->timestamps();
 
             #Relations
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('set null')->onUpdate('cascade');
             $table->foreign('size_id')->references('id')->on('sizes')->onDelete('set null')->onUpdate('cascade');
             $table->foreign('color_id')->references('id')->on('colors')->onDelete('set null')->onUpdate('cascade');
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade')->onUpdate('cascade');

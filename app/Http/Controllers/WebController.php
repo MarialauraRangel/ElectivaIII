@@ -8,18 +8,12 @@ use App\Banner;
 use App\Product;
 use App\Color;
 use App\Size;
-use App\ProductSize;
-use App\ColorProduct;
 use App\Category;
 use App\Subcategory;
-use App\Payment;
-use App\Transfer;
 use App\Order;
-use App\Item;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\CartAddProductRequest;
 use App\Http\Requests\CartQtyProductRequest;
-use App\Http\Requests\SaleStoreRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\Paginator;
@@ -289,6 +283,7 @@ class WebController extends Controller
     public function checkout(Request $request)
     {
         $categories_menu=$this->categories;
+        $request->session()->forget('aditional_info');
         $total=0;
         $products=[];
         if ($request->session()->has('cart')) {
