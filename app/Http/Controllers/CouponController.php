@@ -39,14 +39,11 @@ class CouponController extends Controller
      */
     public function store(CouponStoreRequest $request) {
         // Validación para que no se repita el slug
-        $code=Str::random(8);
-        $slug="cupon-".Str::slug($code, '-');
         while (true) {
-            $count2=Coupon::where('slug', $slug)->count();
-            if ($count2>0) {
-                $slug="cupon-".$num;
-                $num++;
-            } else {
+            $code=Str::random(8);
+            $slug="cupon-".Str::slug($code, '-');
+            $count=Coupon::where('slug', $slug)->withTrashed()->count();
+            if ($count==0) {
                 $data=array('code' => $code, 'slug' => $slug, 'discount' => request('discount'), 'limit' => request('limit'));
                 break;
             }
@@ -55,7 +52,7 @@ class CouponController extends Controller
         $coupon=Coupon::create($data);
 
         if ($coupon) {
-            return redirect()->route('cupones.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Registro exitoso', 'msg' => 'El cupon ha sido registrado exitosamente.']);
+            return redirect()->route('cupones.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Registro exitoso', 'msg' => 'El cupón ha sido registrado exitosamente.']);
         } else {
             return redirect()->route('cupones.create')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Registro fallido', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.'])->withInputs();
         }
@@ -80,14 +77,13 @@ class CouponController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(CouponUpdateRequest $request, $slug) {
-
         $coupon=Coupon::where('slug', $slug)->firstOrFail();
         $data=array('discount' => request('discount'), 'limit' => request('limit'));
 
         $coupon->fill($data)->save();
 
         if ($coupon) {
-            return redirect()->route('cupones.edit', ['slug' => $slug])->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'El cupon ha sido editado exitosamente.']);
+            return redirect()->route('cupones.edit', ['slug' => $slug])->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'El cupón ha sido editado exitosamente.']);
         } else {
             return redirect()->route('cupones.edit', ['slug' => $slug])->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Edición fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
         }
@@ -105,7 +101,7 @@ class CouponController extends Controller
         $coupon->delete();
 
         if ($coupon) {
-            return redirect()->route('cupones.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Eliminación exitosa', 'msg' => 'El cupon ha sido eliminado exitosamente.']);
+            return redirect()->route('cupones.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Eliminación exitosa', 'msg' => 'El cupón ha sido eliminado exitosamente.']);
         } else {
             return redirect()->route('cupones.index')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Eliminación fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
         }

@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -50,6 +52,16 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if (request()->header('Content-Type')=='application/json' || (isset(explode('/', $request->url())[3]) && explode('/', $request->url())[3]=="api")) {
+            if ($exception instanceof MethodNotAllowedHttpException) {
+                return response()->json(['message' => 'El método especificado en la petición no es valido'], 405);
+            }
+
+            if ($exception instanceof AuthenticationException) {
+                return response()->json(['message' => 'No autenticado'], 401);
+            }
+        }
+
         return parent::render($request, $exception);
     }
 }

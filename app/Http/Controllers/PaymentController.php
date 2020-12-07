@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Product;
 use App\Color;
 use App\Size;
+use App\Coupon;
 use App\Item;
 use App\Order;
 use App\Payment;
@@ -86,15 +87,18 @@ class PaymentController extends Controller
     }
 
     public function pay(SaleStoreRequest $request) {
-        $total=0;
+        $subtotal=0;
         foreach (session('cart') as $item) {
-            $total+=floatval($item['subtotal']);
+            $subtotal+=floatval($item['subtotal']);
         }
+        $discount=(session()->has('coupon')) ? ($subtotal*session('coupon')->discount)/100 : 0.00 ;
+        $total=$subtotal-$discount;
 
         if (request('method')=='1') {
-            $data=array('total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'address' => request('address'));
+            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'address' => request('address'));
             $order=$this->storePayment($data, 'transfer', session('cart'));
             if ($order) {
+                $request->session()->forget('coupon');
                 $request->session()->forget('cart');
                 return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
             } else {
@@ -111,9 +115,10 @@ class PaymentController extends Controller
             }
 
         } elseif (request('method')=='3') {
-            $data=array('total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'address' => request('address'));
+            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'address' => request('address'));
             $order=$this->storePayment($total, 'openpay', session('cart'));
             if ($order) {
+                $request->session()->forget('coupon');
                 $request->session()->forget('cart');
                 return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
             } else {
@@ -165,12 +170,18 @@ class PaymentController extends Controller
         $execution=new PaymentExecution();
         $execution->setPayerId(request('PayerID'));
         $result=$payment->execute($execution, $this->apiContext);
-        $balance=$result->transactions[0]->related_resources[0]->sale->amount->total-$result->transactions[0]->related_resources[0]->sale->transaction_fee->value;
-        
+
         if ($result->getState()==='approved') {
-            $data=array('total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'address' => session('aditional_info')[0]['address']);
+            $subtotal=0;
+            foreach (session('cart') as $item) {
+                $subtotal+=floatval($item['subtotal']);
+            }
+            $discount=(session()->has('coupon')) ? ($subtotal*session('coupon')->discount)/100 : 0.00 ;-
+            $balance=$result->transactions[0]->related_resources[0]->sale->amount->total-$result->transactions[0]->related_resources[0]->sale->transaction_fee->value;
+            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'address' => session('aditional_info')[0]['address']);
             $order=$this->storePayment($data, 'paypal', session('cart'));
             if ($order) {
+                $request->session()->forget('coupon');
                 $request->session()->forget('cart');
                 return redirect()->route('web.profile')->with(['alert' => 'lobibox', 'type' => 'success', 'title' => 'Compra exitosa', 'msg' => 'La compra ha finalizado exitosamente.']);
             } else {
@@ -186,6 +197,10 @@ class PaymentController extends Controller
     }
 
     public function storePayment($data_array, $type, $cart) {
+        if (count($cart)==0) {
+            return false;
+        }
+
         // Validación para que no se repita el slug
         $slug="pago";
         $num=0;
@@ -195,8 +210,9 @@ class PaymentController extends Controller
                 $slug="pago-".$num;
                 $num++;
             } else {
+                $coupon_id=(session()->has('coupon')) ? session('coupon')->id : NULL;
                 $state=($type=="transfer") ? "2" : "1";
-                $data=array('slug' => $slug, 'subject' => 'Compra en supertecpan.com', 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'method' => $data_array['method'], 'currency' => $data_array['currency'], 'state' => $state, 'user_id' => Auth::user()->id);
+                $data=array('slug' => $slug, 'subject' => 'Compra en supertecpan.com', 'subtotal' => $data_array['subtotal'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'method' => $data_array['method'], 'currency' => $data_array['currency'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id);
                 break;
             }
         }
@@ -222,7 +238,7 @@ class PaymentController extends Controller
                 $slug="pedido-".$num;
                 $num++;
             } else {
-                $data=array('slug' => $slug, 'total' => $data_array['total'], 'phone' => $data_array['phone'], 'address' => $data_array['address'], 'state' => $state, 'user_id' => Auth::user()->id, 'payment_id' => $payment->id); 
+                $data=array('slug' => $slug, 'subtotal' => $data_array['subtotal'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'phone' => $data_array['phone'], 'address' => $data_array['address'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id, 'payment_id' => $payment->id); 
                 break;
             }
 
@@ -230,13 +246,31 @@ class PaymentController extends Controller
 
         $order=Order::create($data);
 
-        foreach ($cart as $item) {
-            $product_id=(!is_null($item['product'])) ? Product::where('slug', $item['product']->slug)->first()->id : NULL;
-            $size_id=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->first()->id : NULL;
-            $color_id=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->first()->id : NULL;
+        if ($payment && $order && session()->has('coupon')) {
+            $coupon=Coupon::where('id', $coupon_id)->withTrashed()->first();
+            if (!is_null($coupon)) {
+                $uses=$coupon->use+1;
+                $coupon->fill(['use' => $uses])->save();
+            }
+        }
 
-            $data=array('price' => $item['price'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $product_id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
-            Item::create($data)->save();
+        foreach ($cart as $item) {
+            if (!is_null($item['product'])) {
+                $product=Product::where('slug', $item['product']->slug)->withTrashed()->first();
+                $product_id=$product->id;
+            } else {
+                $product=NULL;
+                $product_id=NULL;
+            }
+            $size_id=(!is_null($item['size'])) ? Size::where('slug', $item['size']->slug)->withTrashed()->first()->id : NULL;
+            $color_id=(!is_null($item['color'])) ? Color::where('slug', $item['color']->slug)->withTrashed()->first()->id : NULL;
+
+            $data=array('price' => $item['price'], 'discount' => $item['discount'], 'qty' => $item['qty'], 'subtotal' => number_format(floatval($item['subtotal']), 2, ".", ""), 'product_id' => $product_id, 'size_id' => $size_id, 'color_id' => $color_id, 'order_id' => $order->id);
+            $orderItem=Item::create($data)->save();
+            if ($orderItem && !is_null($product) ) {
+                $qty=($product->qty>=$item['qty']) ? ($product->qty-$item['qty']) : 0;
+                $product->fill(['qty' => $qty])->save();
+            }
         }
 
         return $order;

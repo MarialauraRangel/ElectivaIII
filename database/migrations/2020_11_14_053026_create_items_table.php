@@ -16,6 +16,7 @@ class CreateItemsTable extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->float('price', 10, 2)->default(0.00)->unsigned();
+            $table->integer('discount')->default(0);
             $table->integer('qty')->default(1);
             $table->float('subtotal', 10, 2)->default(0.00)->unsigned();
             $table->bigInteger('product_id')->unsigned()->nullable();

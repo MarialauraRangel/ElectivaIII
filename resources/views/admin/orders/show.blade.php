@@ -19,20 +19,20 @@
 					<h3 class="pb-3">Datos del Usuario</h3>
 				</div>
 				<div class="text-center user-info">
-					<img src="{{ image_exist('/admins/img/admins/', $order->user->photo, true) }}" width="90" height="90" alt="Foto de perfil">
-					<p class="">{{ $order->user->name." ".$order->user->lastname }}</p>
+					<img src="{{ image_exist('/admins/img/admins/', $order->user()->withTrashed()->first()->photo, true) }}" width="90" height="90" alt="Foto de perfil">
+					<p class="">{{ $order->user()->withTrashed()->first()->name." ".$order->user()->withTrashed()->first()->lastname }}</p>
 				</div>
 				<div class="user-info-list">
 					<div class="">
 						<ul class="contacts-block list-unstyled mw-100 mx-2">
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Teléfono:</b> @if(!is_null($order->user->phone) && !empty($order->user->phone)){{ $order->user->phone }}@else{{ $order->phone }}@endif</span>
+								<span class="h6 text-black"><b>Teléfono:</b> @if(!is_null($order->user()->withTrashed()->first()) && !empty($order->user()->withTrashed()->first()->phone)){{ $order->user()->withTrashed()->first()->phone }}@else{{ $order->phone }}@endif</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Email:</b> {{ $order->user->email }}</span>
+								<span class="h6 text-black"><b>Email:</b> {{ $order->user()->withTrashed()->first()->email }}</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Estado:</b> {!! state($order->user->state) !!}</span>
+								<span class="h6 text-black"><b>Estado:</b> @if(!is_null($order->user()->first())){!! state($order->user->state) !!}@else{!! '<span class="badge badge-danger">Eliminado</span>' !!}@endif</span>
 							</li>
 						</ul>
 					</div>                                    
@@ -65,8 +65,13 @@
 								<span class="h6 text-black"><b>Cantidad de Productos:</b> {{ $order->items->sum('qty') }}</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Total:</b> {{ "$".number_format($order->total, 2, ",", ".") }}</span>
+								<span class="h6 text-black"><b>Total Pagado:</b> {{ "$".number_format($order->total, 2, ",", ".") }}</span>
 							</li>
+							@if(!is_null($order->coupon))
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Cupón de Descuento:</b> {{ $order->coupon->discount."%" }}</span>
+							</li>
+							@endif
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Estado:</b> {!! stateOrder($order->state) !!}</span>
 							</li>
@@ -100,6 +105,7 @@
 												<th>Producto</th>
 												<th>Cantidad</th>
 												<th>Precio</th>
+												<th>Descuento</th>
 												<th>Subtotal</th>
 											</tr>
 										</thead>
@@ -107,16 +113,21 @@
 											@foreach($order->items as $item)
 											<tr>
 												<td>{{ $num++ }}</td>
-												<td>{{ $item->product->name }}@if(!is_null($item->size)){{ " (Talla ".$item->size->name.")" }}@endif @if(!is_null($item->color))<br><i class="fa fa-square" style="color: {{ $item->color->color }};"></i> {{ $item->color->color }}@endif</td>
+												<td>{{ $item->product()->withTrashed()->first()->name }}@if(!is_null($item->size()->withTrashed()->first())){{ " (Talla ".$item->size()->withTrashed()->first()->name.")" }}@endif @if(!is_null($item->color()->withTrashed()->first()))<br><i class="fa fa-square" style="color: {{ $item->color()->withTrashed()->first()->color }};"></i> {{ $item->color()->withTrashed()->first()->color }}@endif</td>
 												<td>{{ $item->qty }}</td>
 												<td>{{ "$".number_format($item->price, 2, ",", ".") }}</td>
+												<td>{{ $item->discount."%" }}</td>
 												<td>{{ "$".number_format($item->subtotal, 2, ",", ".") }}</td>
 											</tr>
 											@endforeach
 										</tbody>
 										<tfooter>
 											<tr>
-												<td colspan="4" class="text-primary text-uppercase font-weight-bold">Total</td>
+												<td colspan="5" class="text-primary text-uppercase font-weight-bold">Descuento</td>
+												<td class="text-primary text-uppercase font-weight-bold">{{ "-$".number_format($order->discount, 2, ",", ".") }}</td>
+											</tr>
+											<tr>
+												<td colspan="5" class="text-primary text-uppercase font-weight-bold">Total</td>
 												<td class="text-primary text-uppercase font-weight-bold">{{ "$".number_format($order->total, 2, ",", ".") }}</td>
 											</tr>
 										</tfooter>
@@ -157,7 +168,10 @@
 							</li>
 							@endif
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Total:</b> {{ "$".number_format($order->payment->total, 2, ",", ".") }}</span>
+								<span class="h6 text-black"><b>Subtotal:</b> {{ "$".number_format($order->payment->subtotal, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Descuento:</b> <b class="text-danger">{{ "-$".number_format($order->payment->discount, 2, ",", ".") }}</b></span>
 							</li>
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Comisión:</b> <b class="text-danger">{{ "-$".number_format($order->payment->fee, 2, ",", ".") }}</b></span>

@@ -47,7 +47,7 @@
 									@foreach($payments as $payment)
 									<tr>
 										<td>{{ $num++ }}</td>
-										<td>{{ $payment->user->name." ".$payment->user->lastname }}</td>
+										<td>{{ $payment->user()->withTrashed()->first()->name." ".$payment->user()->withTrashed()->first()->lastname }}</td>
 										<td>{{ methodPayment($payment->method) }}</td>
 										<td>{{ "$".number_format($payment->total, 2, ",", ".") }}</td>
 										<td>{!! statePayment($payment->state) !!}</td>

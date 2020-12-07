@@ -37,6 +37,8 @@ Route::post('/carrito', 'WebController@cartAdd')->name('cart.add');
 Route::post('/carrito/quitar', 'WebController@cartRemove')->name('cart.remove');
 Route::post('/carrito/cantidad', 'WebController@cartQty')->name('cart.qty');
 Route::get('/comprar', 'WebController@checkout')->name('checkout');
+Route::post('/cupon/agregar', 'WebController@couponAdd')->name('coupon.add');
+Route::post('/cupon/quitar', 'WebController@couponRemove')->name('coupon.remove');
 Route::post('/comprar', 'PaymentController@pay')->name('pay');
 Route::get('/paypal/estado', 'PaymentController@paypalStatus')->name('paypal.status');
 Route::get('/paypal/cancelado', 'PaymentController@paypalCancel')->name('paypal.cancel');

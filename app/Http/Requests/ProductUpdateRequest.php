@@ -26,7 +26,7 @@ class ProductUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|min:2|max:191|unique:products,name',
+            'name' => 'required|string|min:2|max:191|'.Rule::unique('products')->ignore($this->slug, 'slug'),
             'code' => 'required|string|min:2|max:191',
             'subcategory_id' => 'required|array',
             'color_id' => 'nullable|array',

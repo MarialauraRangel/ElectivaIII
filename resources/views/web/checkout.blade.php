@@ -28,6 +28,16 @@
 					@endforeach
 					<hr>
 					<p class="d-flex total-price">
+						<span class="text-dark font-weight-bold">Subtotal</span>
+						<span class="text-right" id="subtotal" subtotal="{{ $subtotal }}">{{ "$".number_format($subtotal, 2, ",", ".") }}</span>
+					</p>
+					<hr>
+					<p class="d-flex total-price">
+						<span class="text-dark font-weight-bold">Descuento</span>
+						<span class="text-right" id="discount" discount="{{ $discount }}">{{ "- $".number_format($discount, 2, ",", ".") }}</span>
+					</p>
+					<hr>
+					<p class="d-flex total-price">
 						<span class="text-dark font-weight-bold">Total</span>
 						<span class="text-right" id="total" total="{{ $total }}">{{ "$".number_format($total, 2, ",", ".") }}</span>
 					</p>
@@ -144,6 +154,28 @@
 									<input type="text" class="form-control" required name="reference" placeholder="Introduzca una refencia" @if(!is_null(old('method')) && old('method')!=1) disabled @endif value="{{ old('reference') }}">
 								</div>
 							</div>
+						</div>
+
+						<div class="form-group col-12" id="div-coupon">
+							@if(!session()->has('coupon'))
+							<div>
+								<a href="javascript:void(0);" id="btn-coupon">Agregar cupón de descuento</a>
+								<div class="row" style="display: none;" id="card-add-coupon">
+									<div class="form-group col-lg-8 col-md-8 col-12">
+										<input type="text" class="form-control" name="coupon" placeholder="Introduzca un coupon" id="input-coupon">
+										<p class="text-danger font-weight-bold d-none mb-0">Este campo es requerido</p>
+									</div>
+									<div class="form-group col-lg-4 col-md-4 col-12">
+										<button type="button" class="btn btn-dark rounded w-100" id="btn-add-coupon">Agregar</button>
+									</div>
+								</div>
+							</div>
+							@else
+							<div class="alert alert-success">
+								<p class="mb-1">El cupón de descuendo ha sido agregado</p>
+								<a href="javascript:void(0);" id="remove-coupon">Quitar cupón</a>
+							</div>
+							@endif
 						</div>
 
 						<div class="form-group col-12">

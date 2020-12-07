@@ -84,7 +84,9 @@ class LoginController extends Controller
         return $this->sendFailedLoginResponse($request);
     }
 
-    protected function loggedOut() {
+    protected function loggedOut(Request $request) {
+        $request->session()->forget('cart');
+        $request->session()->forget('coupon');
         return redirect(url()->previous());
     }
 }

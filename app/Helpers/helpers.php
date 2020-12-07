@@ -158,7 +158,12 @@ function selectSubcategories($arrays, $selectedItems) {
 				}
 			}
 		}
-		$selects.='<option value="'.$array->slug.'" '.$select.'>'.$array->category->name."/".$array->name.'</option>';
+		if (!is_null($array->category()->withTrashed()->first())) {
+			$category=$array->category()->withTrashed()->first()->name;
+		} else {
+			$category="Desconocida";
+		}
+		$selects.='<option value="'.$array->slug.'" '.$select.'>'.$category."/".$array->name.'</option>';
 	}
 	return $selects;
 }

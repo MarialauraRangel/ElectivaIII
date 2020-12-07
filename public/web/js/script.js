@@ -188,7 +188,7 @@ $('#product-add-cart').click(function(event) {
 			});
 		}
 	})
-	.fail(function(obj) {
+	.fail(function() {
 		Lobibox.notify('error', {
 			title: 'Error',
 			sound: true,
@@ -224,6 +224,13 @@ $('.product-remove a').click(function() {
 				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
 			});
 		}
+	})
+	.fail(function() {
+		Lobibox.notify('error', {
+			title: 'Error',
+			sound: true,
+			msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+		});
 	});
 });
 
@@ -256,6 +263,13 @@ $('.qty').change(function() {
 				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
 			});
 		}
+	})
+	.fail(function() {
+		Lobibox.notify('error', {
+			title: 'Error',
+			sound: true,
+			msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+		});
 	});
 });
 
@@ -287,6 +301,13 @@ $('.qty').keyup(function() {
 				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
 			});
 		}
+	})
+	.fail(function() {
+		Lobibox.notify('error', {
+			title: 'Error',
+			sound: true,
+			msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+		});
 	});
 });
 
@@ -304,6 +325,160 @@ $('#selectMethod').change(function() {
 	}
 });
 
+// Abrir y cerrar agregar cupones
+$('#btn-coupon').click(function(event) {
+	toggleBtnCoupon();
+});
+
+function toggleBtnCoupon() {
+	$("#card-add-coupon").toggle(800);
+	if ($(this).hasClass('open')) {
+		$(this).text('Agregar cupón de descuento');
+		$(this).removeClass('open');
+	} else {
+		$(this).text('Cerrar cupón de descuento');
+		$(this).addClass('open');
+	}
+}
+
+// Agregar cupón
+$('#btn-add-coupon').click(function() {
+	addCoupon();
+});
+
+function addCoupon() {
+	$("#card-add-coupon p").addClass('d-none');
+	$('#btn-add-coupon').attr('disabled', true);
+	var coupon=$('#input-coupon').val();
+	if (coupon!="") {
+		$.ajax({
+			url: '/cupon/agregar',
+			type: 'POST',
+			dataType: 'json',
+			data: {coupon: coupon},
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		.done(function(obj) {
+			if (obj.state) {
+				$("#div-coupon div").remove();
+				$("#div-coupon").html('<div class="alert alert-success">'+
+					'<div>'+
+					'<p class="mb-1">El cupón de descuendo ha sido agregado</p>'+
+					'<a href="javascript:void(0);" id="remove-coupon">Quitar cupón</a>'+
+					'</div>'+
+					'<div>');
+
+				// Quitar cupón
+				$('#remove-coupon').on('click', function() {
+					removeCoupon();
+				});
+                
+				var discount=(parseFloat($("#subtotal").attr('subtotal'))*parseInt(obj.discount))/100;
+				var discountFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(discount);
+				var total=parseFloat($("#subtotal").attr('subtotal'))-discount;
+				var totalFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(total);
+
+				$("#discount").attr('subtotal', discount.toFixed(2));
+				$("#discount").text('- $'+discountFormat);
+				$("#total").attr('total', total.toFixed(2));
+				$("#total").text('$'+totalFormat);
+				Lobibox.notify('success', {
+					title: 'Cupón agregado',
+					sound: true,
+					msg: 'El cupón ha sido agregado exitosamente.'
+				});
+			} else {
+				$('#btn-add-coupon').attr('disabled', false);
+				Lobibox.notify('error', {
+					title: obj.title,
+					sound: true,
+					msg: obj.message
+				});
+			}
+		})
+		.fail(function() {
+			$('#btn-add-coupon').attr('disabled', false);
+			Lobibox.notify('error', {
+				title: 'Error',
+				sound: true,
+				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+			});
+		});
+	} else {
+		$("#card-add-coupon p").removeClass('d-none');
+		$('#btn-add-coupon').attr('disabled', false);
+	}
+}
+
+// Quitar cupón
+$('#remove-coupon').click(function() {
+	removeCoupon();
+});
+
+function removeCoupon() {
+	$.ajax({
+		url: '/cupon/quitar',
+		type: 'POST',
+		dataType: 'json',
+		headers: {
+			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+		}
+	})
+	.done(function(obj) {
+		if (obj.state) {
+			$("#div-coupon div").remove();
+			$("#div-coupon").html('<div>'+
+				'<a href="javascript:void(0);" id="btn-coupon">Agregar cupón de descuento</a>'+
+				'<div class="row" style="display: none;" id="card-add-coupon">'+
+				'<div class="form-group col-lg-8 col-md-8 col-12">'+
+				'<input type="text" class="form-control" name="coupon" placeholder="Introduzca un coupon" id="input-coupon">'+
+				'<p class="text-danger font-weight-bold d-none mb-0">Este campo es requerido</p>'+
+				'</div>'+
+				'<div class="form-group col-lg-4 col-md-4 col-12">'+
+				'<button type="button" class="btn btn-dark rounded w-100" id="btn-add-coupon">Agregar</button>'+
+				'</div>'+
+				'</div>'+
+				'</div>');
+
+			// Abrir y cerrar agregar cupones
+			$('#btn-coupon').on('click', function(event) {
+				toggleBtnCoupon();
+			});
+
+			// Agregar cupón
+			$('#btn-add-coupon').on('click', function() {
+				addCoupon();
+			});
+
+			$("#discount").attr('subtotal', '0.00');
+			$("#discount").text('- $0,00');
+			$("#total").attr('total', $("#subtotal").attr('subtotal'));
+			$("#total").text($("#subtotal").text());
+			Lobibox.notify('success', {
+				title: 'Cupón Removido',
+				sound: true,
+				msg: 'El cupón ha sido removido exitosamente.'
+			});
+		} else {
+			Lobibox.notify('error', {
+				title: 'Error',
+				sound: true,
+				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+			});
+		}
+	})
+	.fail(function() {
+		Lobibox.notify('error', {
+			title: 'Error',
+			sound: true,
+			msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+		});
+	});
+}
+
+// Agregar subcategorías en select del filtro de la tienda
 $('#shopCategories').change(function() {
 	var slug=$('#shopCategories option:selected').val();
 	$('#shopSubcategories option').remove();
@@ -337,6 +512,13 @@ $('#shopCategories').change(function() {
 					msg: 'Ha ocurrido un problema, intentelo nuevamente.'
 				});
 			}
+		})
+		.fail(function() {
+			Lobibox.notify('error', {
+				title: 'Error',
+				sound: true,
+				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+			});
 		});
 	}
 });

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\User;
-use App\Http\Controllers\Controller;
+use App\Order;
+use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\ApiLoginRequest;
 use App\Http\Requests\ApiRegisterRequest;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Auth;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
 	public function login(ApiLoginRequest $request) {
 		$user=User::where('email', request('email'))->first();
@@ -78,17 +79,26 @@ class AuthController extends Controller
 		return response()->json(["data" => $user], 200);
 	}
 
-	// public function orders(Request $request) {
-	// 	$orders=$request->user()->orders;
-	// 	return response()->json(["data" => $orders], 200);
-	// }
+	public function orders(Request $request) {
+		$orders=$request->user()->orders->map(function($order) {
+			return $this->dataOrder($order);
+		});
+		return response()->json(["data" => $orders], 200);
+	}
 
-	// public function order(Request $request, $order) {
-	// 	$order=$request->user()->orders->where("id", $order);
-	// 	if (!is_null($order)) {
-	// 		return response()->json(["data" => $orders], 200);
-	// 	}
-		
-	// 	return response()->json(["message" => "Este pedido no pertenece a este usuario."], 404);
-	// }
+	public function order(Request $request, $order) {
+		$order=Order::find($order);
+		if (!is_null($order)) {
+			$order=$request->user()->orders()->where('id', $order->id)->first();
+			if (!is_null($order)) {
+				$order=$this->dataOrder($order);
+
+				return response()->json(["data" => $order], 200);	
+			}
+
+			return response()->json(["message" => "Este pedido no pertenece a este cliente."], 403);
+		}
+
+		return response()->json(["message" => "Este pedido no existe."], 404);
+	}
 }

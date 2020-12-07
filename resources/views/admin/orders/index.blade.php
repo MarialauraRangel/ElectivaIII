@@ -47,7 +47,7 @@
 									@foreach($orders as $order)
 									<tr>
 										<td>{{ $num++ }}</td>
-										<td>{{ $order->user->name." ".$order->user->lastname }}</td>
+										<td>{{ $order->user()->withTrashed()->first()->name." ".$order->user()->withTrashed()->first()->lastname }}</td>
 										<td>{{ "$".number_format($order->total, 2, ",", ".") }}</td>
 										<td>{!! statePayment($order->payment->state) !!}</td>
 										<td>{!! stateOrder($order->state) !!}</td>

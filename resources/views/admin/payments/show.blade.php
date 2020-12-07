@@ -17,20 +17,20 @@
 					<h3 class="pb-3">Datos del Usuario</h3>
 				</div>
 				<div class="text-center user-info">
-					<img src="{{ image_exist('/admins/img/admins/', $payment->user->photo, true) }}" width="90" height="90" alt="Foto de perfil">
-					<p class="">{{ $payment->user->name." ".$payment->user->lastname }}</p>
+					<img src="{{ image_exist('/admins/img/admins/', $payment->user()->withTrashed()->first()->photo, true) }}" width="90" height="90" alt="Foto de perfil">
+					<p class="">{{ $payment->user()->withTrashed()->first()->name." ".$payment->user()->withTrashed()->first()->lastname }}</p>
 				</div>
 				<div class="user-info-list">
 					<div class="">
 						<ul class="contacts-block list-unstyled mw-100 mx-2">
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Teléfono:</b> {{ $payment->user->phone }}</span>
+								<span class="h6 text-black"><b>Teléfono:</b> @if(!is_null($payment->user()->withTrashed()->first()) && !empty($payment->user()->withTrashed()->first()->phone)){{ $payment->user()->withTrashed()->first()->phone }}@else{{ "No Ingresado" }}@endif</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Email:</b> {{ $payment->user->email }}</span>
+								<span class="h6 text-black"><b>Email:</b> {{ $payment->user()->withTrashed()->first()->email }}</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Estado:</b> {!! state($payment->user->state) !!}</span>
+								<span class="h6 text-black"><b>Estado:</b> @if(!is_null($payment->user()->first())){!! state($payment->user->state) !!}@else{!! '<span class="badge badge-danger">Eliminado</span>' !!}@endif</span>
 							</li>
 						</ul>
 					</div>                                    
@@ -65,7 +65,10 @@
 							</li>
 							@endif
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Total:</b> {{ "$".number_format($payment->total, 2, ",", ".") }}</span>
+								<span class="h6 text-black"><b>Subtotal:</b> {{ "$".number_format($payment->subtotal, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Descuento:</b> <b class="text-danger">{{ "-$".number_format($payment->discount, 2, ",", ".") }}</b></span>
 							</li>
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Comisión:</b> <b class="text-danger">{{ "-$".number_format($payment->fee, 2, ",", ".") }}</b></span>

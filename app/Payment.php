@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    protected $fillable = ['slug', 'subject', 'total', 'fee', 'balance', 'method', 'currency', 'state', 'user_id'];
+    protected $fillable = ['slug', 'subject', 'subtotal', 'discount', 'total', 'fee', 'balance', 'method', 'currency', 'state', 'user_id', 'coupon_id'];
 
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function coupon() {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function transfer() {

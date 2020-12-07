@@ -48,7 +48,7 @@
 									<tr>
 										<td>{{ $num++ }}</td>
 										<td>{{ $subcategory->name }}</td>
-										<td>{{ $subcategory->category()->withTrashed()->first()->name }}</td>
+										<td>@if(!is_null($subcategory->category()->withTrashed()->first())){{ $subcategory->category()->withTrashed()->first()->name }}@else{{ "Desconocida" }}@endif</td>
 										<td>
 											<div class="btn-group" role="group">
 												<a href="{{ route('subcategorias.edit', ['slug' => $subcategory->slug]) }}" class="btn btn-info btn-sm bs-tooltip" title="Editar"><i class="fa fa-edit"></i></a>

@@ -52,7 +52,7 @@
 										{!! selectSubcategories($subcategories, old('subcategory_id')) !!}
 										@else
 										@foreach($subcategories as $subcategory)
-										<option value="{{ $subcategory->slug }}">{{ $subcategory->category->name."/".$subcategory->name }}</option>
+										<option value="{{ $subcategory->slug }}">@if(!is_null($subcategory->category()->withTrashed()->first())){{ $subcategory->category()->withTrashed()->first()->name."/".$subcategory->name }}@else{{ "Desconocida/".$subcategory->name }}@endif</option>
 										@endforeach
 										@endif
 									</select>

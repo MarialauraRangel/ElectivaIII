@@ -10,6 +10,7 @@ use App\Color;
 use App\Size;
 use App\Category;
 use App\Subcategory;
+use App\Coupon;
 use App\Order;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\CartAddProductRequest;
@@ -32,7 +33,7 @@ class WebController extends Controller
 
     public function index() {
         $categories_menu=$this->categories;
-    	$products=Product::where([['qty', '>', 0], ['state', '1']])->orderBy('id', 'DESC')->limit(8)->get();
+        $products=Product::where([['qty', '>', 0], ['state', '1']])->orderBy('id', 'DESC')->limit(8)->get();
         $banners=Banner::where('state', '1')->get();
         $num=0;
         return view('web.home', compact('categories_menu', 'banners', 'products', 'num'));
@@ -321,11 +322,41 @@ class WebController extends Controller
                     $num++;
                 }
             }
+            $subtotal=$total;
+            $discount=(session()->has('coupon')) ? ($total*session('coupon')->discount)/100 : 0.00 ;
+            $total=$subtotal-$discount;
 
-            return view('web.checkout', compact('categories_menu', 'total'));
+            return view('web.checkout', compact('categories_menu', 'subtotal', 'discount', 'total'));
         }
 
         return redirect()->route('cart.index');
+    }
+
+    public function couponAdd(Request $request) {
+        $coupon=Coupon::where('code', request('coupon'))->first();
+        if (!is_null($coupon)) {
+            if ($coupon->orders->where('user_id', Auth::id())->count()==0) {
+                if ($coupon->limit>$coupon->use) {
+                    if (!session()->has('coupon')) {
+                        $request->session()->put('coupon', $coupon);
+                        return response()->json(["state" => true, "discount" => $coupon->discount]);
+                    }
+
+                    return response()->json(["state" => false, "title" => "Límite Alcanzado", "message" => "Ya has usado un cupón para esta compra."]);
+                }
+
+                return response()->json(["state" => false, "title" => "Cupón Expirado", "message" => "Este cupón ha expirado."]);
+            }
+
+            return response()->json(["state" => false, "title" => "Cupón No Disponible", "message" => "Ya has utilizado este cupón."]);
+        }
+
+        return response()->json(["state" => false, "title" => "Cupón Incorrecto", "message" => "Este cupón no es correcto."]);
+    }
+
+    public function couponRemove(Request $request) {
+        $request->session()->forget('coupon');
+        return response()->json(["state" => true]);
     }
 
     public function profile() {
@@ -369,9 +400,13 @@ class WebController extends Controller
     }
 
     public function order($slug) {
+        $order=Order::where('slug', $slug)->firstOrFail();
+        if ($order->user_id!=Auth::id()) {
+            return redirect()->route('web.profile');
+        }
+
         $categories_menu=$this->categories;
         $setting=$this->setting;
-        $order=Order::where('slug', $slug)->firstOrFail();
         $num=1;
         return view('web.order', compact('categories_menu', 'setting', 'order', 'num'));
     }
