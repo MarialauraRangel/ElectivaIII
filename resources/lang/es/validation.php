@@ -172,7 +172,16 @@ return [
         'subcategory_discount'  => 'descuento de subcategorías',
         'privacity'             => 'politícas de privacidad',
         'terms'                 => 'términos y condiciones',
-        'message'               => 'mensaje'
+        'message'               => 'mensaje',
+        'street'                => 'calle',
+        'house'                 => 'número de casa',
+        'state_id'              => 'estado',
+        'municipality_id'       => 'municipio',
+        'location_id'           => 'localidad',
+        'delivery'              => 'envío',
+        'method'                => 'método de pago',
+        'max_value_delivery'    => 'valor mínimo de envío',
+        'min_delivery_price'    => 'precio de envío'
     ],
 ];
 ?>

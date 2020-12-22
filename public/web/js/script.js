@@ -23,6 +23,35 @@ $(document).ready(function() {
 		return event.charCode >= 48 && event.charCode <= 57;
 	});
 
+	//Datatables normal
+  if ($('.table-normal').length) {
+    $('.table-normal').DataTable({
+      "oLanguage": {
+        "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+        "sInfo": "Resultados del _START_ al _END_ de un total de _TOTAL_ registros",
+        "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+        "sSearchPlaceholder": "Buscar...",
+        "sLengthMenu": "Mostrar _MENU_ registros",
+        "sProcessing":     "Procesando...",
+        "sZeroRecords":    "No se encontraron resultados",
+        "sEmptyTable":     "Ningún resultado disponible en esta tabla",
+        "sInfoEmpty":      "No hay resultados",
+        "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+        "sInfoPostFix":    "",
+        "sUrl":            "",
+        "sInfoThousands":  ",",
+        "sLoadingRecords": "Cargando...",
+        "oAria": {
+          "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+          "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+        }
+      },
+      "stripeClasses": [],
+      "lengthMenu": [10, 20, 50, 100, 200, 500],
+      "pageLength": 10
+    });
+  }
+
 	//dropify para input file más personalizado
 	if ($('.dropify').length) {
 		$('.dropify').dropify({
@@ -311,6 +340,30 @@ $('.qty').keyup(function() {
 	});
 });
 
+// Cambiar metodo de envio
+$('#selectDelivery').change(function() {
+	if ($(this).val()==2) {
+		var subtotal=parseFloat($("#subtotal").attr('subtotal')), discount=parseFloat($("#discount").attr('discount'));
+		var total=parseFloat(subtotal-discount);
+		var totalFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(total);
+		$("#delivery").attr('delivery', '0.00');
+		$("#delivery").text('$0,00');
+		$("#total").attr('total', total);
+		$("#total").text('$'+totalFormat);
+	} else {
+		var subtotal=parseFloat($("#subtotal").attr('subtotal')), delivery=parseFloat($("#total").attr('delivery')), discountPercentile=parseInt($("#discount").attr('discount'));
+		var deliveryFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(delivery);
+		var discount=(parseFloat(subtotal+delivery)*discountPercentile)/100;
+		var total=parseFloat(subtotal+delivery)-discount;
+		var totalFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(total);
+
+		$("#delivery").attr('delivery', delivery.toFixed(2));
+		$("#delivery").text('$'+deliveryFormat);
+		$("#total").attr('total', total.toFixed(2));
+		$("#total").text('$'+totalFormat);
+	}
+});
+
 // Cambiar metodo de pago
 $('#selectMethod').change(function() {
 	if ($(this).val()==2) {
@@ -374,10 +427,11 @@ function addCoupon() {
 				$('#remove-coupon').on('click', function() {
 					removeCoupon();
 				});
-                
-				var discount=(parseFloat($("#subtotal").attr('subtotal'))*parseInt(obj.discount))/100;
+
+				var subtotal=parseFloat($("#subtotal").attr('subtotal')), delivery=parseFloat($("#delivery").attr('delivery'));
+				var discount=(parseFloat(subtotal+delivery)*parseInt(obj.discount))/100;
 				var discountFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(discount);
-				var total=parseFloat($("#subtotal").attr('subtotal'))-discount;
+				var total=parseFloat(subtotal+delivery)-discount;
 				var totalFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(total);
 
 				$("#discount").attr('subtotal', discount.toFixed(2));
@@ -452,10 +506,13 @@ function removeCoupon() {
 				addCoupon();
 			});
 
+			var subtotal=parseFloat($("#subtotal").attr('subtotal')), delivery=parseFloat($("#delivery").attr('delivery'));
+			var total=parseFloat(subtotal+delivery);
+			var totalFormat=new Intl.NumberFormat("de-DE", {style: 'decimal', minimumFractionDigits: 2}).format(total);
 			$("#discount").attr('subtotal', '0.00');
 			$("#discount").text('- $0,00');
-			$("#total").attr('total', $("#subtotal").attr('subtotal'));
-			$("#total").text($("#subtotal").text());
+			$("#total").attr('total', total);
+			$("#total").text('$'+totalFormat);
 			Lobibox.notify('success', {
 				title: 'Cupón Removido',
 				sound: true,
@@ -502,6 +559,96 @@ $('#shopCategories').change(function() {
 				for (var i=obj.data.length-1; i>=0; i--) {
 					$('#shopSubcategories').append($('<option>', {
 						value: obj.data[i].slug,
+						text: obj.data[i].name
+					}));
+				}
+			} else {
+				Lobibox.notify('error', {
+					title: 'Error',
+					sound: true,
+					msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+				});
+			}
+		})
+		.fail(function() {
+			Lobibox.notify('error', {
+				title: 'Error',
+				sound: true,
+				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+			});
+		});
+	}
+});
+
+// Agregar municipios en select
+$('#selectStates').change(function() {
+	var id=$('#selectStates option:selected').val();
+	$('#selectMunicipalities option, #selectLocations option').remove();
+	$('#selectMunicipalities, #selectLocations').append($('<option>', {
+		value: '',
+		text: 'Seleccione'
+	}));
+	if (id!="") {
+		$.ajax({
+			url: '/municipios/agregar',
+			type: 'POST',
+			dataType: 'json',
+			data: {id: id},
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		.done(function(obj) {
+			if (obj.state) {
+				$('#selectMunicipalities option[value!=""]').remove();
+				for (var i=obj.data.length-1; i>=0; i--) {
+					$('#selectMunicipalities').append($('<option>', {
+						value: obj.data[i].id,
+						text: obj.data[i].name
+					}));
+				}
+			} else {
+				Lobibox.notify('error', {
+					title: 'Error',
+					sound: true,
+					msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+				});
+			}
+		})
+		.fail(function() {
+			Lobibox.notify('error', {
+				title: 'Error',
+				sound: true,
+				msg: 'Ha ocurrido un problema, intentelo nuevamente.'
+			});
+		});
+	}
+});
+
+// Agregar localidades en select
+$('#selectMunicipalities').change(function() {
+	var id=$('#selectMunicipalities option:selected').val();
+	$('#selectLocations option').remove();
+	$('#selectLocations').append($('<option>', {
+		value: '',
+		text: 'Seleccione'
+	}));
+	if (id!="") {
+		$.ajax({
+			url: '/localidades/agregar',
+			type: 'POST',
+			dataType: 'json',
+			data: {id: id},
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		.done(function(obj) {
+			if (obj.state) {
+				$('#selectLocations option[value!=""]').remove();
+				for (var i=obj.data.length-1; i>=0; i--) {
+					$('#selectLocations').append($('<option>', {
+						value: obj.data[i].id,
 						text: obj.data[i].name
 					}));
 				}

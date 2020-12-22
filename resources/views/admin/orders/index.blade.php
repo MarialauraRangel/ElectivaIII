@@ -37,6 +37,7 @@
 										<th>#</th>
 										<th>Usuario</th>
 										<th>Total</th>
+										<th>Entrega</th>
 										<th>Pago</th>
 										<th>Estado</th>
 										<th>Fecha</th>
@@ -49,6 +50,7 @@
 										<td>{{ $num++ }}</td>
 										<td>{{ $order->user()->withTrashed()->first()->name." ".$order->user()->withTrashed()->first()->lastname }}</td>
 										<td>{{ "$".number_format($order->total, 2, ",", ".") }}</td>
+										<td>{!! typeDelivery($order->type_delivery) !!}</td>
 										<td>{!! statePayment($order->payment->state) !!}</td>
 										<td>{!! stateOrder($order->state) !!}</td>
 										<td>{{ $order->created_at->format("d-m-Y H:i a") }}</td>

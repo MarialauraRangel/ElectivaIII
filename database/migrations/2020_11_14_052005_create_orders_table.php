@@ -17,12 +17,13 @@ class CreateOrdersTable extends Migration
             $table->bigIncrements('id');
             $table->string('slug')->unique();
             $table->float('subtotal', 10, 2)->default(0.00)->unsigned();
+            $table->float('delivery', 10, 2)->default(0.00)->unsigned();
             $table->float('discount', 10, 2)->default(0.00)->unsigned();
             $table->float('total', 10, 2)->default(0.00)->unsigned();
             $table->float('fee', 10, 2)->default(0.00)->unsigned();
             $table->float('balance', 10, 2)->default(0.00)->unsigned();
             $table->string('phone');
-            $table->string('address');
+            $table->enum('type_delivery', [1, 2])->default(2);
             $table->enum('state', [0, 1, 2])->default(2);
             $table->bigInteger('user_id')->unsigned()->nullable();
             $table->bigInteger('coupon_id')->unsigned()->nullable();

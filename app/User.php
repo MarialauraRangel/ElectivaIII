@@ -18,7 +18,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $fillable = ['name', 'lastname', 'phone', 'photo', 'slug', 'email', 'password', 'state', 'type'];
+    protected $fillable = ['name', 'lastname', 'slug', 'photo', 'phone', 'street', 'house', 'address', 'email', 'password', 'state', 'type', 'location_id'];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -47,6 +47,10 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function location() {
+        return $this->belongsTo(Location::class);
     }
 
     public function orders() {

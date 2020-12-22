@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\User;
+use App\State;
+use App\Municipality;
+use App\Location;
 use App\Product;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\Request;
@@ -70,5 +73,25 @@ class AdminController extends Controller
         } else {
             return "true";
         }
+    }
+
+    public function addMunicipalities(Request $request) {
+        $state=State::where('id', request('id'))->first();
+        if (!is_null($state)) {
+            $municipalities=$state->municipalities()->select("id", "name")->orderBy('name', 'DESC')->get();
+            return response()->json(["state" => true, "data" => $municipalities]);
+        }
+
+        return response()->json(["state" => false]);
+    }
+
+    public function addLocations(Request $request) {
+        $municipality=Municipality::where('id', request('id'))->first();
+        if (!is_null($municipality)) {
+            $locations=$municipality->locations()->select("id", "name")->orderBy('name', 'DESC')->get();
+            return response()->json(["state" => true, "data" => $locations]);
+        }
+
+        return response()->json(["state" => false]);
     }
 }

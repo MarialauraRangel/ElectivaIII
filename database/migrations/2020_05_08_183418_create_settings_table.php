@@ -26,6 +26,8 @@ class CreateSettingsTable extends Migration
             $table->string('twitter')->nullable();
             $table->string('instagram')->nullable();
             $table->integer('discount')->default(0);
+            $table->float('max_value_delivery', 10, 2)->default(0.00)->unsigned();
+            $table->float('min_delivery_price', 10, 2)->default(0.00)->unsigned();
             $table->string('banner')->nullable();
             $table->timestamps();
         });

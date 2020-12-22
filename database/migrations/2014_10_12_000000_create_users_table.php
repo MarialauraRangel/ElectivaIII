@@ -20,12 +20,17 @@ class CreateUsersTable extends Migration
             $table->string('photo')->default('usuario.png');
             $table->string('slug')->unique();
             $table->string('phone')->nullable();
+            $table->string('street')->nullable();
+            $table->string('house')->nullable();
+            $table->string('address')->nullable();
+            $table->bigInteger('location_id')->unsigned()->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->enum('state', [0, 1])->default(1);
             $table->enum('type', [1, 2])->default(2);
             $table->rememberToken();
+
             $table->timestamps();
             $table->softDeletes();
         });

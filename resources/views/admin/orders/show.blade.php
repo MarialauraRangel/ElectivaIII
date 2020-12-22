@@ -59,9 +59,6 @@
 								<span class="h6 text-black"><b>Teléfono:</b> {{ $order->phone }}</span>
 							</li>
 							<li class="contacts-block__item">
-								<span class="h6 text-black"><b>Dirección:</b> {{ $order->address }}</span>
-							</li>
-							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Cantidad de Productos:</b> {{ $order->items->sum('qty') }}</span>
 							</li>
 							<li class="contacts-block__item">
@@ -75,6 +72,17 @@
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Estado:</b> {!! stateOrder($order->state) !!}</span>
 							</li>
+							<div class="col-lg-6 col-md-6 col-12">
+								<p><strong>Tipo de Entrega:</strong> {{ typeDelivery($order->type_delivery, 0) }}</p>
+							</div>
+							@if($order->type_delivery==1)
+							<div class="col-lg-6 col-md-6 col-12">
+								<p><strong>Dirección de Envío:</strong> {{ $order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state()->withTrashed()->first()->country()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->name.", ".$order->shipping->street.", casa número ".$order->shipping->house }}</p>
+							</div>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Información Adicional de la Dirección:</b> {{ $order->shipping->address }}</span>
+							</li>
+							@endif
 							<li class="contacts-block__item">
 								<a href="{{ route('pedidos.index') }}" class="btn btn-secondary">Volver</a>
 							</li>
@@ -123,6 +131,10 @@
 										</tbody>
 										<tfooter>
 											<tr>
+												<td colspan="5" class="text-primary text-uppercase font-weight-bold">Envío</td>
+												<td class="text-primary text-uppercase font-weight-bold">{{ "$".number_format($order->delivery, 2, ",", ".") }}</td>
+											</tr>
+											<tr>
 												<td colspan="5" class="text-primary text-uppercase font-weight-bold">Descuento</td>
 												<td class="text-primary text-uppercase font-weight-bold">{{ "-$".number_format($order->discount, 2, ",", ".") }}</td>
 											</tr>
@@ -169,6 +181,9 @@
 							@endif
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Subtotal:</b> {{ "$".number_format($order->payment->subtotal, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Envío:</b> {{ "$".number_format($order->payment->delivery, 2, ",", ".") }}</span>
 							</li>
 							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Descuento:</b> <b class="text-danger">{{ "-$".number_format($order->payment->discount, 2, ",", ".") }}</b></span>

@@ -68,6 +68,9 @@
 								<span class="h6 text-black"><b>Subtotal:</b> {{ "$".number_format($payment->subtotal, 2, ",", ".") }}</span>
 							</li>
 							<li class="contacts-block__item">
+								<span class="h6 text-black"><b>Envío:</b> {{ "$".number_format($order->payment->delivery, 2, ",", ".") }}</span>
+							</li>
+							<li class="contacts-block__item">
 								<span class="h6 text-black"><b>Descuento:</b> <b class="text-danger">{{ "-$".number_format($payment->discount, 2, ",", ".") }}</b></span>
 							</li>
 							<li class="contacts-block__item">

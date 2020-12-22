@@ -3,6 +3,9 @@
 @section('title', 'Perfil')
 
 @section('links')
+<link rel="stylesheet" type="text/css" href="{{ asset('/admins/vendor/table/datatable/datatables.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ asset('/admins/vendor/table/datatable/custom_dt_html5.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ asset('/admins/vendor/table/datatable/dt-global_style.css') }}">
 <link rel="stylesheet" href="{{ asset('/admins/vendor/dropify/dropify.min.css') }}">
 <link rel="stylesheet" href="{{ asset('/admins/vendor/lobibox/Lobibox.min.css') }}">
 @endsection
@@ -45,11 +48,11 @@
 							<div class="col-12">
 								@if($orders->count()>0)
 								<div class="cart-list">
-									<table class="table">
+									<table class="table table-normal">
 										<thead class="thead-primary">
 											<tr class="text-center">
 												<th>#</th>
-												<th>Cantidad de Productos</th>
+												<th>N° Productos</th>
 												<th>Total</th>
 												<th>Pago</th>
 												<th>Estado</th>
@@ -82,7 +85,7 @@
 						</div>    
 					</div>
 					<div class="tab-pane fade @if(session('tabs')=="setting"){{ 'show active' }}@endif" id="animated-underline-setting" role="tabpanel" aria-labelledby="animated-underline-setting-tab">
-						<form action="{{ route('web.profile.update') }}" method="POST" class="form" id="formProfile" enctype="multipart/form-data">
+						<form action="{{ route('web.profile.update') }}" method="POST" class="form" id="formProfileWeb" enctype="multipart/form-data">
 							@csrf
 							@method('PUT')
 							<p>Campos obligatorios (<b class="text-danger">*</b>)</p>
@@ -121,6 +124,60 @@
 								</div>
 
 								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="country">País<b class="text-danger">*</b></label>
+									<input type="text" class="form-control" disabled value="México">
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="state_id">Estado<b class="text-danger">*</b></label>
+									<select class="form-control @error('state_id') is-invalid @enderror" name="state_id" required id="selectStates">
+										<option value="">Seleccione</option>
+										@foreach($states as $state)
+										<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state_id==$state->id) selected @endif value="{{ $state->id }}">{{ $state->name }}</option>
+										@endforeach
+									</select>
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="municipality_id">Ciudad / Municipio<b class="text-danger">*</b></label>
+									<select class="form-control @error('municipality_id') is-invalid @enderror" name="municipality_id" required id="selectMunicipalities">
+										<option value="">Seleccione</option>
+										@if(count($municipalities)>0)
+										@foreach($municipalities as $municipality)
+										<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location()->withTrashed()->first()->municipality_id==$municipality->id) selected @endif value="{{ $municipality->id }}">{{ $municipality->name }}</option>
+										@endforeach
+										@endif
+									</select>
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="location_id">Localidad<b class="text-danger">*</b></label>
+									<select class="form-control @error('location_id') is-invalid @enderror" name="location_id" required id="selectLocations">
+										<option value="">Seleccione</option>
+										@if(count($locations)>0)
+										@foreach($locations as $location)
+										<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location_id==$location->id) selected @endif value="{{ $location->id }}">{{ $location->name }}</option>
+										@endforeach
+										@endif
+									</select>
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="street">Calle</label>
+									<input class="form-control @error('street') is-invalid @enderror" type="text" name="street" placeholder="Introduzca su calle" value="{{ Auth::user()->street }}">
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
+									<label for="house">Número de Casa</label>
+									<input class="form-control number @error('house') is-invalid @enderror" type="text" name="house" placeholder="Introduzca su número de casa" value="{{ Auth::user()->house }}">
+								</div>
+
+								<div class="form-group col-12">
+									<label for="address">Dirección (Información Adicional)</label>
+									<input class="form-control @error('address') is-invalid @enderror" type="text" name="address" placeholder="Introduzca su dirección" value="{{ Auth::user()->address }}">
+								</div>
+
+								<div class="form-group col-lg-6 col-md-6 col-12">
 									<label class="col-form-label">Contraseña (Opcional)</label>
 									<input class="form-control @error('password') is-invalid @enderror" type="password" name="password" placeholder="********" id="password">
 								</div>
@@ -146,7 +203,11 @@
 @endsection
 
 @section('scripts')
-{{-- <script src="{{ asset('/admins/vendor/table/datatable/datatables.js') }}"></script> --}}
+<script src="{{ asset('/admins/vendor/table/datatable/datatables.js') }}"></script>
 <script src="{{ asset('/admins/vendor/dropify/dropify.min.js') }}"></script>
+<script src="{{ asset('/admins/vendor/validate/jquery.validate.js') }}"></script>
+<script src="{{ asset('/admins/vendor/validate/additional-methods.js') }}"></script>
+<script src="{{ asset('/admins/vendor/validate/messages_es.js') }}"></script>
+<script src="{{ asset('/admins/js/validate.js') }}"></script>
 <script src="{{ asset('/admins/vendor/lobibox/Lobibox.js') }}"></script>
 @endsection

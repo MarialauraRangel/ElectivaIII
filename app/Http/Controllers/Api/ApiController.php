@@ -79,7 +79,7 @@ class ApiController extends Controller
 
 		$payment=[];
 		if (!is_null($order->payment)) {
-			$payment=$order->payment->only("id", "slug", "subject", "subtotal", "discount", "total", "fee", "balance", "method", "currency", "state", "created_at");
+			$payment=$order->payment->only("id", "slug", "subject", "subtotal", "delivery", "discount", "total", "fee", "balance", "method", "currency", "state", "created_at");
 			$payment["method"]=methodPayment($payment["method"]);
 			if ($payment["state"]==0) {
 				$payment["state"]='Rechazado';
@@ -91,7 +91,12 @@ class ApiController extends Controller
 			$payment["created_at"]=$payment["created_at"]->format("d-m-Y H:i:s");
 		}
 
-		$order=$order->only("id", "slug", "phone", "address", "state", "created_at");
+		$shipping="";
+		if (!is_null($order->shipping)) {
+			$shipping=array('address' => $order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state()->withTrashed()->first()->country()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->municipality()->withTrashed()->first()->name.", ".$order->shipping->location()->withTrashed()->first()->name.", ".$order->shipping->street.", casa número ".$order->shipping->house, 'aditional_information' => $order->shipping->address);
+		}
+
+		$order=$order->only("id", "slug", "phone", "type_delivery", "state", "created_at");
 		if ($order["state"]==0) {
 			$order["state"]='Rechazado';
 		} elseif ($order["state"]==1) {
@@ -99,6 +104,8 @@ class ApiController extends Controller
 		} else {
 			$order["state"]='Pendiente';
 		}
+		$order["shipping"]=typeDelivery($order['type_delivery'], 0);
+		$order['delivery_address']=$shipping;
 		$order["created_at"]=$order["created_at"]->format("d-m-Y H:i:s");
 		$order["items"]=$items;
 		$order["user"]=$user;

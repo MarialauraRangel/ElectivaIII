@@ -905,6 +905,38 @@ $(document).ready(function(){
 		});
 	});
 
+	//Envíos
+	$("button[action='delivery']").on("click",function(){
+		$("#formDelivery").validate({
+			rules:
+			{
+				max_value_delivery: {
+					required: true,
+					min: 0
+				},
+
+				min_delivery_price: {
+					required: true,
+					min: 0
+				}
+			},
+			messages:
+			{
+				max_value_delivery: {
+					min: 'Escribe un valor mayor o igual a {0}.'
+				},
+
+				min_delivery_price: {
+					min: 'Escribe un valor mayor o igual a {0}.'
+				}
+			},
+			submitHandler: function(form) {
+				$("button[action='delivery']").attr('disabled', true);
+				form.submit();
+			}
+		});
+	});
+
 	//Nosotros
 	$("button[action='about']").on("click",function(){
 		$("#formAbout").validate({
@@ -1072,6 +1104,133 @@ $(document).ready(function(){
 		});
 	});
 
+	//Perfil (Web)
+	$("button[action='profile']").on("click",function(){
+		$("#formProfileWeb").validate({
+			rules:
+			{
+				name: {
+					required: true,
+					minlength: 2,
+					maxlength: 191
+				},
+
+				lastname: {
+					required: true,
+					minlength: 2,
+					maxlength: 191
+				},
+
+				phone: {
+					required: false,
+					minlength: 5,
+					maxlength: 15
+				},
+
+				state_id: {
+					required: true
+				},
+
+				municipality_id: {
+					required: true
+				},
+
+				location_id: {
+					required: true
+				},
+
+				street: {
+					required: false,
+					minlength: 1,
+					maxlength: 191
+				},
+
+				house: {
+					required: false,
+					minlength: 1,
+					maxlength: 191
+				},
+
+				address: {
+					required: false,
+					minlength: 2,
+					maxlength: 191
+				},
+
+				password: {
+					required: false,
+					minlength: 8,
+					maxlength: 40
+				},
+
+				password_confirmation: { 
+					equalTo: "#password",
+					minlength: 8,
+					maxlength: 40
+				}
+			},
+			messages:
+			{
+				name: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				lastname: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				phone: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				state_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				municipality_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				location_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				street: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				house: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				address: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				password: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				password_confirmation: { 
+					equalTo: 'Los datos ingresados no coinciden.',
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				}
+			},
+			submitHandler: function(form) {
+				$("button[action='profile']").attr('disabled', true);
+				form.submit();
+			}
+		});
+	});
+
 	//Contacto Web
 	$("button[action='contact']").on("click",function(){
 		$("#formContactWeb").validate({
@@ -1123,18 +1282,51 @@ $(document).ready(function(){
 
 	// Finalizar Compra
 	$("button[action='sale']").on("click",function(){
+		$("#formSale").validate().destroy();
+		var delivery=true;
+		if ($("#formSale #selectDelivery").val()=="2") {
+			delivery=false;
+		}
 		$("#formSale").validate({
 			rules:
 			{
-				address: {
-					required: true,
-					minlength: 2,
-					maxlength: 191
-				},
-
 				phone: {
 					required: true,
 					minlength: 5,
+					maxlength: 15
+				},
+
+				delivery: {
+					required: true
+				},
+
+				state_id: {
+					required: delivery
+				},
+
+				municipality_id: {
+					required: delivery
+				},
+
+				location_id: {
+					required: delivery
+				},
+
+				street: {
+					required: delivery,
+					minlength: 1,
+					maxlength: 191
+				},
+
+				house: {
+					required: delivery,
+					minlength: 1,
+					maxlength: 191
+				},
+
+				address: {
+					required: false,
+					minlength: 2,
 					maxlength: 191
 				},
 
@@ -1150,12 +1342,38 @@ $(document).ready(function(){
 			},
 			messages:
 			{
-				address: {
+				phone: {
 					minlength: 'Escribe mínimo {0} caracteres.',
 					maxlength: 'Escribe máximo {0} caracteres.'
 				},
 
-				phone: {
+				delivery: {
+					required: 'Seleccione un opción.'
+				},
+
+				state_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				municipality_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				location_id: {
+					required: 'Seleccione un opción.'
+				},
+
+				street: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				house: {
+					minlength: 'Escribe mínimo {0} caracteres.',
+					maxlength: 'Escribe máximo {0} caracteres.'
+				},
+
+				address: {
 					minlength: 'Escribe mínimo {0} caracteres.',
 					maxlength: 'Escribe máximo {0} caracteres.'
 				},

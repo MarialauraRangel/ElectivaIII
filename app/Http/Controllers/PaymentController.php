@@ -2,29 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Product;
-use App\Color;
-use App\Size;
-use App\Coupon;
+use Auth;
 use App\Item;
+use App\Size;
+use App\Color;
 use App\Order;
-use App\Payment;
+use App\Coupon;
 use App\Paypal;
+use App\Payment;
+use App\Product;
+use App\Setting;
+use App\Delivery;
 use App\Transfer;
-use Illuminate\Http\Request;
-use App\Http\Requests\SaleStoreRequest;
 use PayPal\Api\Payer;
 use PayPal\Api\Amount;
+use Illuminate\Support\Str;
 use PayPal\Api\Transaction;
 use PayPal\Rest\ApiContext;
+use Illuminate\Http\Request;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\PaymentExecution;
 use PayPal\Auth\OAuthTokenCredential;
+use Illuminate\Support\Facades\Config;
+use App\Http\Requests\SaleStoreRequest;
 use PayPal\Api\Payment as PaymentPaypal;
 use PayPal\Exception\PayPalConnectionException;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Str;
-use Auth;
 
 class PaymentController extends Controller
 {
@@ -80,6 +82,7 @@ class PaymentController extends Controller
         $payment->fill(['state' => "1"])->save();
 
         if ($payment) {
+            $payment->order->fill(['state' => "1"])->save();
             return redirect()->route('pagos.index')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'El pago ha sido confirmado exitosamente.']);
         } else {
             return redirect()->route('pagos.index')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Edición fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
@@ -87,15 +90,21 @@ class PaymentController extends Controller
     }
 
     public function pay(SaleStoreRequest $request) {
+        $setting=Setting::first();
         $subtotal=0;
         foreach (session('cart') as $item) {
             $subtotal+=floatval($item['subtotal']);
         }
+        if (request('delivery')==1) {
+            $delivery=($setting->max_value_delivery>$subtotal) ? $setting->min_delivery_price : 0.00;
+        } else {
+            $delivery=0.00;
+        }
         $discount=(session()->has('coupon')) ? ($subtotal*session('coupon')->discount)/100 : 0.00 ;
-        $total=$subtotal-$discount;
+        $total=$subtotal+$delivery-$discount;
 
         if (request('method')=='1') {
-            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'address' => request('address'));
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
             $order=$this->storePayment($data, 'transfer', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
@@ -108,15 +117,15 @@ class PaymentController extends Controller
         } elseif (request('method')=='2') {
             $response=$this->payWithPaypal($total);
             if ($response['status']) {
-                $request->session()->put('aditional_info', array(0 => ['phone' => request('phone'), 'address' => request('address')]));
+                $request->session()->put('aditional_info', array(0 => ['phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address')]));
                 return redirect()->away($response['url']);
             } else {
                 return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
             }
 
         } elseif (request('method')=='3') {
-            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'address' => request('address'));
-            $order=$this->storePayment($total, 'openpay', session('cart'));
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
+            $order=$this->storePayment($data, 'openpay', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
                 $request->session()->forget('cart');
@@ -172,13 +181,19 @@ class PaymentController extends Controller
         $result=$payment->execute($execution, $this->apiContext);
 
         if ($result->getState()==='approved') {
+            $setting=Setting::first();
             $subtotal=0;
             foreach (session('cart') as $item) {
                 $subtotal+=floatval($item['subtotal']);
             }
+            if (session('aditional_info')[0]['delivery_type']==1) {
+                $delivery=($setting->max_value_delivery>$subtotal) ? $setting->min_delivery_price : 0.00;
+            } else {
+                $delivery=0.00;
+            }
             $discount=(session()->has('coupon')) ? ($subtotal*session('coupon')->discount)/100 : 0.00 ;-
             $balance=$result->transactions[0]->related_resources[0]->sale->amount->total-$result->transactions[0]->related_resources[0]->sale->transaction_fee->value;
-            $data=array('subtotal' => $subtotal, 'discount' => $discount, 'total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'address' => session('aditional_info')[0]['address']);
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'delivery_type' => session('aditional_info')[0]['delivery_type'], 'location_id' => session('aditional_info')[0]['location_id'], 'street' => session('aditional_info')[0]['street'], 'house' => session('aditional_info')[0]['house'], 'address' => session('aditional_info')[0]['address']);
             $order=$this->storePayment($data, 'paypal', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
@@ -212,7 +227,7 @@ class PaymentController extends Controller
             } else {
                 $coupon_id=(session()->has('coupon')) ? session('coupon')->id : NULL;
                 $state=($type=="transfer") ? "2" : "1";
-                $data=array('slug' => $slug, 'subject' => 'Compra en supertecpan.com', 'subtotal' => $data_array['subtotal'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'method' => $data_array['method'], 'currency' => $data_array['currency'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id);
+                $data=array('slug' => $slug, 'subject' => 'Compra en supertecpan.com', 'subtotal' => $data_array['subtotal'], 'delivery' => $data_array['delivery'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'method' => $data_array['method'], 'currency' => $data_array['currency'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id);
                 break;
             }
         }
@@ -238,13 +253,42 @@ class PaymentController extends Controller
                 $slug="pedido-".$num;
                 $num++;
             } else {
-                $data=array('slug' => $slug, 'subtotal' => $data_array['subtotal'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'phone' => $data_array['phone'], 'address' => $data_array['address'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id, 'payment_id' => $payment->id); 
+                $data=array('slug' => $slug, 'subtotal' => $data_array['subtotal'], 'delivery' => $data_array['delivery'], 'discount' => $data_array['discount'], 'total' => $data_array['total'], 'fee' => $data_array['fee'], 'balance' => $data_array['balance'], 'phone' => $data_array['phone'], 'type_delivery' => $data_array['delivery_type'], 'state' => $state, 'user_id' => Auth::user()->id, 'coupon_id' => $coupon_id, 'payment_id' => $payment->id);
                 break;
             }
-
         }
 
         $order=Order::create($data);
+
+        if ($data_array['delivery_type']==1) {
+            $data=array('street' => $data_array['street'], 'house' => $data_array['house'], 'address' => $data_array['address'], 'location_id' => $data_array['location_id'], 'order_id' => $order->id);
+            Delivery::create($data);
+
+            $data=[];
+            if (is_null(Auth::user()->street) && !is_null($data_array['street'])) {
+                $data['street']=$data_array['street'];
+                Auth::user()->street=$data_array['street'];
+            }
+            if (is_null(Auth::user()->house) && !is_null($data_array['house'])) {
+                $data['house']=$data_array['house'];
+                Auth::user()->house=$data_array['house'];
+            }
+            if (is_null(Auth::user()->address) && !is_null($data_array['address'])) {
+                $data['address']=$data_array['address'];
+                Auth::user()->address=$data_array['address'];
+            }
+            if (is_null(Auth::user()->location_id) && !is_null($data_array['location_id'])) {
+                $data['location_id']=$data_array['location_id'];
+                Auth::user()->location_id=$data_array['location_id'];
+            }
+            Auth::user()->fill($data)->save();
+        }
+
+        if (is_null(Auth::user()->phone) && !is_null($data_array['phone'])) {
+            $data['phone']=$data_array['phone'];
+            Auth::user()->phone=$data_array['phone'];
+            Auth::user()->fill($data)->save();
+        }
 
         if ($payment && $order && session()->has('coupon')) {
             $coupon=Coupon::where('id', $coupon_id)->withTrashed()->first();

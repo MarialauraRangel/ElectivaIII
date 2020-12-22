@@ -54,6 +54,26 @@ function typeUser($type, $badge=1) {
 	}
 }
 
+function typeDelivery($type, $badge=1) {
+	if ($badge==1) {
+		if ($type==1) {
+			return '<span class="badge badge-primary">Envío</span>';
+		} elseif ($type==2) {
+			return '<span class="badge badge-primary">Recoger en Tienda</span>';
+		} else {
+			return '<span class="badge badge-dark">Desconocido</span>';
+		}
+	} elseif ($badge==0) {
+		if ($type==1) {
+			return 'Envío';
+		} elseif ($type==2) {
+			return 'Recoger en Tienda';
+		} else {
+			return 'Desconocido';
+		}
+	}
+}
+
 function active($path, $group=null) {
 	if (is_array($path)) {
 		foreach ($path as $url) {

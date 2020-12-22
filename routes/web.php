@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 Route::get('/administradores/email', 'AdminController@emailVerifyAdmin');
 Route::post('/subcategorias/agregar', 'SubcategoryController@addSubcategories');
+Route::post('/municipios/agregar', 'AdminController@addMunicipalities');
+Route::post('/localidades/agregar', 'AdminController@addLocations');
 
 Route::group(['middleware' => ['auth']], function () {
 	Route::post('/salir', 'AuthController@logout')->name('logout.custom');
@@ -154,6 +156,10 @@ Route::group(['middleware' => ['auth', 'admin']], function () {
 	Route::get('/admin/colores/{slug}/editar', 'ColorController@edit')->name('colores.edit');
 	Route::put('/admin/colores/{slug}', 'ColorController@update')->name('colores.update');
 	Route::delete('/admin/colores/{slug}', 'ColorController@destroy')->name('colores.delete');
+
+	// Envios
+	Route::get('/admin/envios/editar', 'SettingController@editDeliveries')->name('envios.edit');
+	Route::put('/admin/envios', 'SettingController@updateDeliveries')->name('envios.update');
 
 	// Descuentos
 	Route::get('/admin/descuentos/editar', 'SettingController@editDiscounts')->name('descuentos.edit');

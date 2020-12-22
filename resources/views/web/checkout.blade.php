@@ -33,13 +33,18 @@
 					</p>
 					<hr>
 					<p class="d-flex total-price">
+						<span class="text-dark font-weight-bold">Envío</span>
+						<span class="text-right" id="delivery" delivery="{{ $delivery }}">{{ "$".number_format($delivery, 2, ",", ".") }}</span>
+					</p>
+					<hr>
+					<p class="d-flex total-price">
 						<span class="text-dark font-weight-bold">Descuento</span>
 						<span class="text-right" id="discount" discount="{{ $discount }}">{{ "- $".number_format($discount, 2, ",", ".") }}</span>
 					</p>
 					<hr>
 					<p class="d-flex total-price">
 						<span class="text-dark font-weight-bold">Total</span>
-						<span class="text-right" id="total" total="{{ $total }}">{{ "$".number_format($total, 2, ",", ".") }}</span>
+						<span class="text-right" id="total" total="{{ $total }}"  delivery="{{ $delivery }}">{{ "$".number_format($total, 2, ",", ".") }}</span>
 					</p>
 				</div>
 			</div>
@@ -128,32 +133,85 @@
 							<input type="text" class="form-control" disabled value="{{ Auth::user()->email }}">
 						</div>
 
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="phone">Teléfono<b class="text-danger">*</b></label>
+							<input type="text" class="form-control @error('phone') is-invalid @enderror" required name="phone" placeholder="Introduzca su número telefónico" @if(!is_null(Auth::user()->phone)) value="{{ Auth::user()->phone }}" @endif>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="delivery">Método de Entrega<b class="text-danger">*</b></label>
+							<select class="form-control" required name="delivery" id="selectDelivery">
+								<option @if(old('delivery')==1) selected @endif value="1">Envío</option>
+								<option @if(old('delivery')==2) selected @endif value="2">Recoger en Tienda</option>
+							</select>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="country">País</label>
+							<input type="text" class="form-control" disabled value="México">
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="state_id">Estado</label>
+							<select class="form-control @error('state_id') is-invalid @enderror" required name="state_id" id="selectStates">
+								<option value="">Seleccione</option>
+								@foreach($states as $state)
+								<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state_id==$state->id || old('state_id')==$state->id) selected @endif value="{{ $state->id }}">{{ $state->name }}</option>
+								@endforeach
+							</select>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="municipality_id">Ciudad / Municipio</label>
+							<select class="form-control @error('municipality_id') is-invalid @enderror" required name="municipality_id" id="selectMunicipalities">
+								<option value="">Seleccione</option>
+								@if(count($municipalities)>0)
+								@foreach($municipalities as $municipality)
+								<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location()->withTrashed()->first()->municipality_id==$municipality->id) selected @endif value="{{ $municipality->id }}">{{ $municipality->name }}</option>
+								@endforeach
+								@endif
+							</select>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="location_id">Localidad</label>
+							<select class="form-control @error('location_id') is-invalid @enderror" required name="location_id" id="selectLocations">
+								<option value="">Seleccione</option>
+								@if(count($locations)>0)
+								@foreach($locations as $location)
+								<option @if(!is_null(Auth::user()->location_id) && Auth::user()->location_id==$location->id) selected @endif value="{{ $location->id }}">{{ $location->name }}</option>
+								@endforeach
+								@endif
+							</select>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="street">Calle</label>
+							<input type="text" name="street" class="form-control @error('street') is-invalid @enderror" required placeholder="Introduzca su calle" @if(!is_null(Auth::user()->street)) value="{{ Auth::user()->street }}" @endif>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-12">
+							<label for="house">Número de Casa</label>
+							<input type="text" name="house" class="form-control number @error('house') is-invalid @enderror" required placeholder="Introduzca su número de casa" @if(!is_null(Auth::user()->house)) value="{{ Auth::user()->house }}" @endif>
+						</div>
+
 						<div class="form-group col-12">
-							<label for="streetaddress">Dirección</label>
-							<input type="text" name="address" class="form-control" required placeholder="Introduzca su dirección (calle, número de casa, avenida, etc)">
+							<label for="address">Dirección (Información Adicional)</label>
+							<input type="text" name="address" class="form-control @error('address') is-invalid @enderror" required placeholder="Introduzca su dirección" @if(!is_null(Auth::user()->address)) value="{{ Auth::user()->address }}" @endif>
 						</div>
 
 						<div class="form-group col-lg-6 col-md-6 col-12">
-							<label for="phone">Teléfono</label>
-							<input type="text" class="form-control" required name="phone" placeholder="Introduzca su número telefónico" @if(!is_null(Auth::user()->phone)) value="{{ Auth::user()->phone }}" @endif>
-						</div>
-
-						<div class="form-group col-lg-6 col-md-6 col-12">
-							<label for="method">Método de Pago</label>
-							<select class="form-control" required name="method" id="selectMethod">
+							<label for="method">Método de Pago<b class="text-danger">*</b></label>
+							<select class="form-control @error('method') is-invalid @enderror" required name="method" id="selectMethod">
 								<option @if(old('method')==1) selected @endif value="1">Transferencia Bancaria</option>
 								<option @if(old('method')==2) selected @endif value="2">Paypal</option>
 								<option @if(old('method')==3) selected @endif value="3">Openpay</option>
 							</select>
 						</div>
 
-						<div class="col-12 @if(!is_null(old('method')) && old('method')!=1) d-none @endif" id="transfer">
-							<div class="row">
-								<div class="form-group col-lg-6 col-md-6 col-12">
-									<label for="reference">Referencia</label>
-									<input type="text" class="form-control" required name="reference" placeholder="Introduzca una refencia" @if(!is_null(old('method')) && old('method')!=1) disabled @endif value="{{ old('reference') }}">
-								</div>
-							</div>
+						<div class="form-group col-lg-6 col-md-6 col-12 @if(!is_null(old('method')) && old('method')!=1) d-none @endif" id="transfer">
+							<label for="reference">Referencia</label>
+							<input type="text" class="form-control @error('reference') is-invalid @enderror" required name="reference" placeholder="Introduzca una refencia" @if(!is_null(old('method')) && old('method')!=1) disabled @endif value="{{ old('reference') }}">
 						</div>
 
 						<div class="form-group col-12" id="div-coupon">

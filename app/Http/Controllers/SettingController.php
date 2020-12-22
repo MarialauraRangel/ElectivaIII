@@ -8,6 +8,7 @@ use App\Subcategory;
 use App\Product;
 use App\Setting;
 use App\Http\Requests\DiscountUpdateRequest;
+use App\Http\Requests\DeliveryUpdateRequest;
 use App\Http\Requests\AboutUpdateRequest;
 use App\Http\Requests\TermUpdateRequest;
 use App\Http\Requests\PoliticUpdateRequest;
@@ -21,8 +22,6 @@ use Illuminate\Support\Str;
 use Excel;
 use App\Disease;
 use App\Operation;
-
-
 
 class SettingController extends Controller
 {
@@ -66,6 +65,22 @@ class SettingController extends Controller
             return redirect()->route('descuentos.edit')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'Los descuentos han sido editados exitosamente.']);
         } else {
             return redirect()->route('descuentos.edit')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Edición fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.'])->withInputs();
+        }
+    }
+
+    public function editDeliveries() {
+        $setting=Setting::where('id', 1)->firstOrFail();
+        return view('admin.settings.deliveries', compact("setting"));
+    }
+
+    public function updateDeliveries(DeliveryUpdateRequest $request) {
+        $setting=Setting::where('id', 1)->firstOrFail();
+        $setting->fill($request->all())->save();
+
+        if ($setting) {
+            return redirect()->route('envios.edit')->with(['alert' => 'sweet', 'type' => 'success', 'title' => 'Edición exitosa', 'msg' => 'Los envíos han sido editados exitosamente.']);
+        } else {
+            return redirect()->route('envios.edit')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Edición fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.'])->withInputs();
         }
     }
 

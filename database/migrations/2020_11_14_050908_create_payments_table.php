@@ -18,6 +18,7 @@ class CreatePaymentsTable extends Migration
             $table->string('slug')->unique();
             $table->string('subject');
             $table->float('subtotal', 10, 2)->default(0.00)->unsigned();
+            $table->float('delivery', 10, 2)->default(0.00)->unsigned();
             $table->float('discount', 10, 2)->default(0.00)->unsigned();
             $table->float('total', 10, 2)->default(0.00)->unsigned();
             $table->float('fee', 10, 2)->default(0.00)->unsigned();

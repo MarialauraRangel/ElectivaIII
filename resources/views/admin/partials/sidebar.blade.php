@@ -92,8 +92,8 @@
                 </a>
             </li>
 
-            <li class="menu {{ active(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }}">
-                <a href="#cog" data-toggle="collapse" aria-expanded="{{ menu_expanded(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }}" class="dropdown-toggle">
+            <li class="menu {{ active(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/envios', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }}">
+                <a href="#cog" data-toggle="collapse" aria-expanded="{{ menu_expanded(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/envios', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }}" class="dropdown-toggle">
                     <div class="">
                         <span><i class="fa fa-cogs"></i> Ajustes</span>
                     </div>
@@ -101,7 +101,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </div>
                 </a>
-                <ul class="collapse submenu list-unstyled {{ submenu(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }} }}" id="cog" data-parent="#accordionExample">
+                <ul class="collapse submenu list-unstyled {{ submenu(['admin/colores', 'admin/tallas', 'admin/descuentos', 'admin/envios', 'admin/nosotros', 'admin/terminos', 'admin/politicas', 'admin/contactos'], 0) }} }}" id="cog" data-parent="#accordionExample">
                     <li {{ submenu('admin/colores') }}>
                         <a href="{{ route('colores.index') }}"> Colores</a>
                     </li>
@@ -110,6 +110,9 @@
                     </li>
                     <li {{ submenu('admin/descuentos/editar') }}>
                         <a href="{{ route('descuentos.edit') }}"> Descuentos</a>
+                    </li>
+                    <li {{ submenu('admin/envios/editar') }}>
+                        <a href="{{ route('envios.edit') }}"> Envíos</a>
                     </li>
                     <li {{ submenu('admin/nosotros/editar') }}>
                         <a href="{{ route('nosotros.edit') }}"> Nosotros</a>

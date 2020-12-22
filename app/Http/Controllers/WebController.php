@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Setting;
+use App\State;
+use App\Municipality;
+use App\Location;
 use App\User;
 use App\Banner;
 use App\Product;
@@ -12,7 +15,7 @@ use App\Category;
 use App\Subcategory;
 use App\Coupon;
 use App\Order;
-use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\ProfileWebUpdateRequest;
 use App\Http\Requests\CartAddProductRequest;
 use App\Http\Requests\CartQtyProductRequest;
 use Illuminate\Http\Request;
@@ -323,10 +326,18 @@ class WebController extends Controller
                 }
             }
             $subtotal=$total;
-            $discount=(session()->has('coupon')) ? ($total*session('coupon')->discount)/100 : 0.00 ;
-            $total=$subtotal-$discount;
+            $delivery=($this->setting->max_value_delivery>$subtotal) ? $this->setting->min_delivery_price : 0.00;
+            $discount=(session()->has('coupon')) ? ($total*session('coupon')->discount)/100 : 0.00;
+            $total=$subtotal+$delivery-$discount;
+            $states=State::orderBy('name', 'ASC')->get();
+            $municipalities=[];
+            $locations=[];
+            if (!is_null(Auth::user()->location_id)) {
+                $municipalities=Municipality::where('state_id', Auth::user()->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state_id)->get();
+                $locations=Location::where('municipality_id', Auth::user()->location()->withTrashed()->first()->municipality_id)->get();
+            }
 
-            return view('web.checkout', compact('categories_menu', 'subtotal', 'discount', 'total'));
+            return view('web.checkout', compact('categories_menu', 'states', 'municipalities', 'locations', 'subtotal', 'delivery', 'discount', 'total'));
         }
 
         return redirect()->route('cart.index');
@@ -362,14 +373,22 @@ class WebController extends Controller
     public function profile() {
         $categories_menu=$this->categories;
         $setting=$this->setting;
+        $states=State::orderBy('name', 'ASC')->get();
+        $municipalities=[];
+        $locations=[];
+        if (!is_null(Auth::user()->location_id)) {
+            $municipalities=Municipality::where('state_id', Auth::user()->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state_id)->get();
+            $locations=Location::where('municipality_id', Auth::user()->location()->withTrashed()->first()->municipality_id)->get();
+        }
         $orders=Order::where('user_id', Auth::user()->id)->orderBy('id', 'DESC')->get();
         $num=1;
-        return view('web.profile', compact('categories_menu', 'setting', 'orders', 'num'));
+        return view('web.profile', compact('categories_menu', 'setting', 'states', 'municipalities', 'locations', 'orders', 'num'));
     }
 
-    public function profileUpdate(ProfileUpdateRequest $request) {
+    public function profileUpdate(ProfileWebUpdateRequest $request) {
         $user=User::where('slug', Auth::user()->slug)->firstOrFail();
-        $data=array('name' => request('name'), 'lastname' => request('lastname'), 'phone' => request('phone'));
+        $location=Location::where('id', request('location_id'))->firstOrFail();
+        $data=array('name' => request('name'), 'lastname' => request('lastname'), 'phone' => request('phone'), 'location_id' => $location->id, 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
 
         if (!is_null(request('password'))) {
             $data['password']=Hash::make(request('password'));
@@ -390,6 +409,10 @@ class WebController extends Controller
             Auth::user()->name=request('name');
             Auth::user()->lastname=request('lastname');
             Auth::user()->phone=request('phone');
+            Auth::user()->location_id=$location->id;
+            Auth::user()->street=request('street');
+            Auth::user()->house=request('house');
+            Auth::user()->address=request('address');
             if (!is_null(request('password'))) {
                 Auth::user()->password=Hash::make(request('password'));
             }

@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Throwable;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
@@ -59,6 +60,10 @@ class Handler extends ExceptionHandler
 
             if ($exception instanceof AuthenticationException) {
                 return response()->json(['message' => 'No autenticado'], 401);
+            }
+
+            if ($exception instanceof ValidationException) {
+                return response()->json(['message' => 'Los datos enviados no eran válidos.', 'errors' => $exception->validator->getMessageBag()], 422);
             }
         }
 
