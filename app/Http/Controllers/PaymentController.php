@@ -104,7 +104,7 @@ class PaymentController extends Controller
         $total=$subtotal+$delivery-$discount;
 
         if (request('method')=='1') {
-            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '1', 'reference' => request('reference'), 'phone' => request('phone'), 'delivery_type' => request('delivery'),  'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
             $order=$this->storePayment($data, 'transfer', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
@@ -117,14 +117,14 @@ class PaymentController extends Controller
         } elseif (request('method')=='2') {
             $response=$this->payWithPaypal($total);
             if ($response['status']) {
-                $request->session()->put('aditional_info', array(0 => ['phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address')]));
+                $request->session()->put('aditional_info', array(0 => ['phone' => request('phone'), 'delivery_type' => request('delivery'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address')]));
                 return redirect()->away($response['url']);
             } else {
                 return redirect()->route('checkout')->with(['alert' => 'lobibox', 'type' => 'error', 'title' => 'Compra fallida', 'msg' => 'Ha ocurrido un error durante el proceso, intentelo nuevamente.']);
             }
 
         } elseif (request('method')=='3') {
-            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'delivery_type' => request('delivery'), 'location_id' => request('location_id'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $total, 'fee' => 0.00, 'balance' => $total, 'currency' => 'USD', 'method' => '3', 'phone' => request('phone'), 'delivery_type' => request('delivery'), 'street' => request('street'), 'house' => request('house'), 'address' => request('address'));
             $order=$this->storePayment($data, 'openpay', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
@@ -193,7 +193,7 @@ class PaymentController extends Controller
             }
             $discount=(session()->has('coupon')) ? ($subtotal*session('coupon')->discount)/100 : 0.00 ;-
             $balance=$result->transactions[0]->related_resources[0]->sale->amount->total-$result->transactions[0]->related_resources[0]->sale->transaction_fee->value;
-            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'delivery_type' => session('aditional_info')[0]['delivery_type'], 'location_id' => session('aditional_info')[0]['location_id'], 'street' => session('aditional_info')[0]['street'], 'house' => session('aditional_info')[0]['house'], 'address' => session('aditional_info')[0]['address']);
+            $data=array('subtotal' => $subtotal, 'delivery' => $delivery, 'discount' => $discount, 'total' => $result->transactions[0]->related_resources[0]->sale->amount->total, 'fee' => $result->transactions[0]->related_resources[0]->sale->transaction_fee->value, 'balance' => $balance, 'currency' => $result->transactions[0]->related_resources[0]->sale->amount->currency, 'method' => '2', 'paypal_payer_id' => request('PayerID'), 'paypal_payment_id' => request('paymentId'), 'phone' => session('aditional_info')[0]['phone'], 'delivery_type' => session('aditional_info')[0]['delivery_type'], 'street' => session('aditional_info')[0]['street'], 'house' => session('aditional_info')[0]['house'], 'address' => session('aditional_info')[0]['address']);
             $order=$this->storePayment($data, 'paypal', session('cart'));
             if ($order) {
                 $request->session()->forget('coupon');
@@ -261,7 +261,7 @@ class PaymentController extends Controller
         $order=Order::create($data);
 
         if ($data_array['delivery_type']==1) {
-            $data=array('street' => $data_array['street'], 'house' => $data_array['house'], 'address' => $data_array['address'], 'location_id' => $data_array['location_id'], 'order_id' => $order->id);
+            $data=array('street' => $data_array['street'], 'house' => $data_array['house'], 'address' => $data_array['address'], 'order_id' => $order->id);
             Delivery::create($data);
 
             $data=[];
@@ -277,10 +277,7 @@ class PaymentController extends Controller
                 $data['address']=$data_array['address'];
                 Auth::user()->address=$data_array['address'];
             }
-            if (is_null(Auth::user()->location_id) && !is_null($data_array['location_id'])) {
-                $data['location_id']=$data_array['location_id'];
-                Auth::user()->location_id=$data_array['location_id'];
-            }
+           
             Auth::user()->fill($data)->save();
         }
 

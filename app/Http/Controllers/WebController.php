@@ -324,20 +324,14 @@ class WebController extends Controller
                     }
                     $num++;
                 }
-            }
+            } 
             $subtotal=$total;
             $delivery=($this->setting->max_value_delivery>$subtotal) ? $this->setting->min_delivery_price : 0.00;
             $discount=(session()->has('coupon')) ? ($total*session('coupon')->discount)/100 : 0.00;
             $total=$subtotal+$delivery-$discount;
-            $states=State::orderBy('name', 'ASC')->get();
-            $municipalities=[];
-            $locations=[];
-            if (!is_null(Auth::user()->location_id)) {
-                $municipalities=Municipality::where('state_id', Auth::user()->location()->withTrashed()->first()->municipality()->withTrashed()->first()->state_id)->get();
-                $locations=Location::where('municipality_id', Auth::user()->location()->withTrashed()->first()->municipality_id)->get();
-            }
+            
 
-            return view('web.checkout', compact('categories_menu', 'states', 'municipalities', 'locations', 'subtotal', 'delivery', 'discount', 'total'));
+            return view('web.checkout', compact('categories_menu', 'subtotal', 'delivery', 'discount', 'total'));
         }
 
         return redirect()->route('cart.index');
