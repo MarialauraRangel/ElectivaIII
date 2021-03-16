@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar ftco-navbar-light shadow px-4">
-	<a class="navbar-brand ml-2" href="{{ route('home') }}"><img src="{{ asset('/web/img/logo.png') }}" width="120" alt="Logo"></a>
+	<a class="navbar-brand ml-2" href="{{ route('home') }}"><span>Electiva III</span></a>
 	<div class="d-flex">
 		<div class="d-flex align-items-center position-relative d-lg-none mr-2">
 			<a href="{{ route('cart.index') }}" class="btn btn-outline-secondary rounded-circle small"><i class="fa fa-sm fa-shopping-cart"></i></a>
@@ -15,7 +15,6 @@
 	<div class="collapse navbar-collapse" id="ftco-nav">
 		<ul class="navbar-nav ml-auto">
 			<li class="nav-item {{ active('/') }}"><a href="{{ route('home') }}" class="nav-link">Inicio</a></li>
-			<li class="nav-item {{ active('nosotros') }}"><a href="{{ route('about') }}" class="nav-link">Nosotros</a></li>
 			<li class="nav-item dropdown">
 				<a href="javascript:void(0);" class="nav-link dropdown-toggle" id="category-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Categorías</a>
 				<div class="dropdown-menu dropdown-user" aria-labelledby="category-dropdown">
@@ -25,7 +24,6 @@
 				</div>
 			</li>
 			<li class="nav-item {{ active('tienda') }}"><a href="{{ route('shop') }}" class="nav-link">Tienda</a></li>
-			<li class="nav-item {{ active('contacto') }}"><a href="{{ route('contact') }}" class="nav-link">Contacto</a></li>
 			<li class="nav-item {{ active('carrito') }} align-items-center position-relative d-none d-lg-flex mr-2">
 				<a href="{{ route('cart.index') }}" class="btn btn-outline-secondary rounded-circle small"><i class="fa fa-sm fa-shopping-cart"></i></a>
 				<div class="position-absolute top right-n-5 pt-1">

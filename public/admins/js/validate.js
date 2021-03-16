@@ -1300,18 +1300,6 @@ $(document).ready(function(){
 					required: true
 				},
 
-				state_id: {
-					required: delivery
-				},
-
-				municipality_id: {
-					required: delivery
-				},
-
-				location_id: {
-					required: delivery
-				},
-
 				street: {
 					required: delivery,
 					minlength: 1,

@@ -30,9 +30,6 @@ class SaleStoreRequest extends FormRequest
                 return [
                     'phone' => 'required|string|min:6|max:15',
                     'delivery' => 'required|'.Rule::in([1, 2]),
-                    'state_id' => 'required',
-                    'municipality_id' => 'required',
-                    'location_id' => 'required',
                     'street' => 'required|string|min:1|max:191',
                     'house' => 'required|string|min:1|max:191',
                     'address' => 'nullable|string|min:2|max:191',
@@ -43,9 +40,6 @@ class SaleStoreRequest extends FormRequest
                 return [
                     'phone' => 'required|string|min:6|max:15',
                     'delivery' => 'required|'.Rule::in([1, 2]),
-                    'state_id' => 'required',
-                    'municipality_id' => 'required',
-                    'location_id' => 'required',
                     'street' => 'required|string|min:1|max:191',
                     'house' => 'required|string|min:1|max:191',
                     'address' => 'nullable|string|min:2|max:191',
@@ -57,9 +51,6 @@ class SaleStoreRequest extends FormRequest
                 return [
                     'phone' => 'required|string|min:6|max:15',
                     'delivery' => 'required|'.Rule::in([1, 2]),
-                    'state_id' => 'nullable',
-                    'municipality_id' => 'nullable',
-                    'location_id' => 'nullable',
                     'street' => 'nullable|string|min:1|max:191',
                     'house' => 'nullable|string|min:1|max:191',
                     'address' => 'nullable|string|min:2|max:191',
@@ -70,9 +61,6 @@ class SaleStoreRequest extends FormRequest
                 return [
                     'phone' => 'required|string|min:6|max:15',
                     'delivery' => 'required|'.Rule::in([1, 2]),
-                    'state_id' => 'nullable',
-                    'municipality_id' => 'nullable',
-                    'location_id' => 'nullable',
                     'street' => 'nullable|string|min:1|max:191',
                     'house' => 'nullable|string|min:1|max:191',
                     'address' => 'nullable|string|min:2|max:191',

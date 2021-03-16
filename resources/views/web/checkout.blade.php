@@ -148,10 +148,10 @@
 
 						<div class="form-group col-lg-6 col-md-6 col-12">
 							<label for="country">País</label>
-							<input type="text" class="form-control" disabled value="México">
+							<input type="text" class="form-control" disabled value="Venezuela">
 						</div>
 
-						<div class="form-group col-lg-6 col-md-6 col-12">
+						{{-- <div class="form-group col-lg-6 col-md-6 col-12">
 							<label for="state_id">Estado</label>
 							<select class="form-control @error('state_id') is-invalid @enderror" required name="state_id" id="selectStates">
 								<option value="">Seleccione</option>
@@ -183,7 +183,7 @@
 								@endforeach
 								@endif
 							</select>
-						</div>
+						</div> --}}
 
 						<div class="form-group col-lg-6 col-md-6 col-12">
 							<label for="street">Calle</label>
@@ -204,8 +204,6 @@
 							<label for="method">Método de Pago<b class="text-danger">*</b></label>
 							<select class="form-control @error('method') is-invalid @enderror" required name="method" id="selectMethod">
 								<option @if(old('method')==1) selected @endif value="1">Transferencia Bancaria</option>
-								<option @if(old('method')==2) selected @endif value="2">Paypal</option>
-								<option @if(old('method')==3) selected @endif value="3">Openpay</option>
 							</select>
 						</div>
 

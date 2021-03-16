@@ -114,18 +114,6 @@
                     <li {{ submenu('admin/envios/editar') }}>
                         <a href="{{ route('envios.edit') }}"> Envíos</a>
                     </li>
-                    <li {{ submenu('admin/nosotros/editar') }}>
-                        <a href="{{ route('nosotros.edit') }}"> Nosotros</a>
-                    </li>
-                    <li {{ submenu('admin/terminos/editar') }}>
-                        <a href="{{ route('terminos.edit') }}"> Términos y Condiciones</a>
-                    </li>
-                    <li {{ submenu('admin/politicas/editar') }}>
-                        <a href="{{ route('politicas.edit') }}"> Políticas</a>
-                    </li>
-                    <li {{ submenu('admin/contactos/editar') }}>
-                        <a href="{{ route('contactos.edit') }}"> Contactos</a>
-                    </li>
                 </ul>
             </li>
         </ul>
